@@ -1231,7 +1231,7 @@ T* fetch_@\placeholdernc{key}@(difference_type operand, memory_order order = mem
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} \tcode{T} \removed{shall be}\added{is} an object type\added{.}
+\removed{\requires}\added{\mandates} \tcode{T} \removed{shall be}\added{is} a\removed{n} \added{complete} object type\added{.}
 \removed{,otherwise the program is ill-formed.}
 
 \pnum
@@ -2185,7 +2185,7 @@ T* fetch_@\placeholdernc{key}@(ptrdiff_t operand, memory_order order = memory_or
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} T \removed{shall be}\added{is} an object type\added{.}
+\removed{\requires}\added{\mandates} T \removed{shall be}\added{is} a\removed{n} \added{complete} object type\added{.}
 \removed{, otherwise the program is ill-formed.}
 \removed{[\textit{Note}: Pointer arithmetic on \tcode{void*} or function pointers is ill-formed. \textit{\,---\,end note}]}
 
