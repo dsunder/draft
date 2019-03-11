@@ -26,9 +26,9 @@ between threads, as summarized in \tref{thread.lib.summary}.
 Throughout this Clause, the names of template parameters are used to express type
 requirements.
 If a template parameter is named \tcode{Predicate}, \tcode{operator()} applied to
-the template argument shall return a value that is convertible to \tcode{bool}.
+the template argument \removed{shall} return\added{s} a value that is convertible to \tcode{bool}.
 If a template parameter is named \tcode{Clock},
-the corresponding template argument shall be a type \tcode{C}
+the corresponding template argument \removed{shall be}\added{is} a type \tcode{C}
 for which \tcode{is_clock_v<C>} is \tcode{true};
 otherwise the program is ill-formed.
 
@@ -36,12 +36,12 @@ otherwise the program is ill-formed.
 
 \pnum
 Some functions described in this Clause are specified to throw exceptions of type
-\tcode{system_error}\iref{syserr.syserr}. Such exceptions shall be thrown if
+\tcode{system_error}\iref{syserr.syserr}. Such exceptions \removed{shall}\added{will} be thrown if
 any of the function's error conditions is detected or
 a call to
 an operating system or other underlying API results in an error that prevents the
 library function from
-meeting its specifications. Failure to allocate storage shall be reported as described
+meeting its specifications. Failure to allocate storage \removed{shal bel}\added{is} reported as described
 in~\ref{res.on.exception.handling}.
 
 \begin{example}
@@ -58,7 +58,7 @@ of type \tcode{system_error} is thrown.
 
 \pnum
 The \tcode{error_code} reported by such an exception's \tcode{code()} member function
-shall compare equal to one of the conditions specified in the function's error condition
+\removed{shall} compare\added{s} equal to one of the conditions specified in the function's error condition
 element.
 
 \rSec2[thread.req.native]{Native handles}
@@ -83,7 +83,7 @@ Implementations necessarily have some delay in returning from a timeout. Any ove
 interrupt response, function return, and scheduling induces a ``quality of implementation''
 delay, expressed as duration $D_i$. Ideally, this delay would be zero. Further, any contention for
 processor and memory resources induces a ``quality of management'' delay, expressed as duration
-$D_m$. The delay durations may vary from timeout to timeout, but in all cases shorter is better.
+$D_m$. The delay durations \removed{may}\added{can} vary from timeout to timeout, but in all cases shorter is better.
 
 \pnum
 The functions whose names end in \tcode{_for} take an argument that
@@ -104,19 +104,19 @@ during the timeout, the behavior should be as follows:
 \begin{itemize}
 \item
 if $C_a > C_t$, the waiting function should wake as soon as possible, i.e., $C_a + D_i + D_m$,
-since the timeout is already satisfied. \begin{note} This specification may result in the total
+since the timeout is already satisfied. \begin{note} This specification \removed{may}\added{can} result in the total
 duration of the wait decreasing when measured against a steady clock. \end{note}
 
 \item
 if $C_a \leq C_t$, the waiting function should not time out until \tcode{Clock::now()} returns a
 time $C_n \geq C_t$, i.e., waking at $C_t + D_i + D_m$. \begin{note} When the clock is adjusted
-backwards, this specification may result in the total duration of the wait increasing when
-measured against a steady clock. When the clock is adjusted forwards, this specification may
+backwards, this specification \removed{may}\added{can} result in the total duration of the wait increasing when
+measured against a steady clock. When the clock is adjusted forwards, this specification \removed{may}\added{can}
 result in the total duration of the wait decreasing when measured against a steady clock.
 \end{note}
 \end{itemize}
 
-An implementation shall return from such a timeout at any point from the time specified above to
+An implementation \removed{shall} return\added{s} from such a timeout at any point from the time specified above to
 the time it would return from a steady-clock relative timeout on the difference between $C_t$
 and the time point of the call to the \tcode{_until} function. \begin{note} Implementations
 should decrease the duration of the wait when the clock is adjusted forwards.
@@ -132,7 +132,7 @@ and hardware. The finest resolution provided by an implementation is called the
 \term{native resolution}.
 
 \pnum
-Implementation-provided clocks that are used for these functions shall satisfy the
+Implementation-provided clocks that are used for these functions \removed{shall satisfy}\added{meet} the
 \oldconcept{TrivialClock} requirements\iref{time.clock.req}.
 
 \pnum
@@ -148,8 +148,8 @@ the implementation as specified in~\ref{time.clock} do not throw exceptions.
 \rSec3[thread.req.lockable.general]{In general}
 
 \pnum
-An \defn{execution agent} is an entity such as a thread that may perform work in parallel with
-other execution agents. \begin{note} Implementations or users may introduce other kinds of
+An \defn{execution agent} is an entity such as a thread that \removed{may}\added{can} perform work in parallel with
+other execution agents. \begin{note} Implementations or users \removed{may}\added{can} introduce other kinds of
 agents such as processes or thread-pool tasks. \end{note} The calling agent is determined by
 context, e.g., the calling thread that contains the call, and so on.
 
@@ -168,7 +168,7 @@ The standard library templates \tcode{unique_lock}\iref{thread.lock.unique},
 lockable objects. The \oldconcept{BasicLockable} requirements, the \oldconcept{Lockable} requirements,
 and the \oldconcept{TimedLockable} requirements list the requirements imposed by these library types
 in order to acquire or release ownership of a \tcode{lock} by a given execution agent.
-\begin{note} The nature of any lock ownership and any synchronization it may entail are not part
+\begin{note} The nature of any lock ownership and any synchronization it \removed{may}\added{could} entail are not part
 of these requirements. \end{note}
 
 \rSec3[thread.req.lockable.basic]{\oldconcept{BasicLockable} requirements}
@@ -193,7 +193,7 @@ m.unlock()
 
 \begin{itemdescr}
 \pnum
-\requires The current execution agent shall hold a lock on \tcode{m}.
+\removed{\requires}\added{\expects} The current execution agent \removed{shall} hold\added{s} a lock on \tcode{m}.
 
 \pnum
 \effects Releases a lock on \tcode{m} held by the current execution agent.
@@ -306,7 +306,7 @@ namespace std {
 The class \tcode{thread} provides a mechanism to create a new thread of execution, to join with
 a thread (i.e., wait for a thread to complete), and to perform other operations that manage and
 query the state of a thread. A \tcode{thread} object uniquely represents a particular thread of
-execution. That representation may be transferred to other \tcode{thread} objects in such a way
+execution. That representation \removed{may}\added{can} be transferred to other \tcode{thread} objects in such a way
 that no two \tcode{thread} objects simultaneously represent the same thread of execution. A
 thread of execution is \term{detached} when no \tcode{thread} object represents that thread.
 Objects of class \tcode{thread} can be in a state that does not represent a thread of
@@ -385,7 +385,7 @@ does not represent threads of execution.
 
 \pnum
 \tcode{thread::id} is a trivially copyable class\iref{class.prop}.
-The library may reuse the value of a \tcode{thread::id} of a terminated thread that can no longer be joined.
+The library \removed{may}\added{can} reuse the value of a \tcode{thread::id} of a terminated thread that can no longer be joined.
 
 \pnum
 \begin{note} Relational operators allow \tcode{thread::id} objects to be used as
@@ -397,7 +397,7 @@ id() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum\effects Constructs an object of type \tcode{id}.
+\removed{\pnum\effects Constructs an object of type \tcode{id}.}
 
 \pnum\ensures The constructed object does not represent a thread of execution.
 \end{itemdescr}
@@ -494,7 +494,7 @@ thread() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum\effects Constructs a \tcode{thread} object that does not represent a thread of execution.
+\pnum\removed{\effects Constructs a \tcode{thread}}\added{The} object \removed{that} does not represent a thread of execution.
 
 \pnum\ensures \tcode{get_id() == id()}.
 \end{itemdescr}
@@ -506,21 +506,29 @@ template<class F, class... Args> explicit thread(F&& f, Args&&... args);
 
 \begin{itemdescr}
 \pnum
-\requires\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} shall satisfy the
+\removed{\requires}\added{\constraints}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} 
+\removed{shall satisfy}\added{meet} the
 \oldconcept{MoveConstructible} requirements.
-\tcode{%
+\removed{\tcode{%
 \placeholdernc{INVOKE}(\brk{}%
 \placeholdernc{decay-copy}(std::forward<F>(f)),%
 \placeholdernc{decay-copy}(std::forward<Args>({}args))...)}\iref{func.require}
-shall be a valid expression.
+\removed{shall be}\added{is} a valid expression.}
 
 \pnum
-\remarks
-This constructor shall not participate in overload resolution if \tcode{remove_cvref_t<F>}
-is the same type as \tcode{std::thread}.
+\added{\expects\ \tcode{%
+\placeholdernc{INVOKE}(\brk{}%
+\placeholdernc{decay-copy}(std::forward<F>(f)),%
+\placeholdernc{decay-copy}(std::forward<Args>({}args))...)}\iref{func.require}
+\removed{shall be}\added{is} a valid expression.}
+
+\added{\pnum}
+\removed{\remarks}\added{\constraints} 
+\removed{This constructor shall not participate in overload resolution if} \tcode{remove_cvref_t<F>}
+is \added{not} the same type as \tcode{std::thread}.
 
 \pnum
-\effects\ Constructs an object of type \tcode{thread}. The new thread of execution executes
+\effects\ \removed{Constructs an object of type \tcode{thread}.} The new thread of execution executes
 \tcode{%
 \placeholdernc{INVOKE}(\brk{}%
 \placeholdernc{decay-copy}(\brk{}%
@@ -537,7 +545,7 @@ invocation of
 std::forward<F>(f)),
 \placeholdernc{decay-copy}(\brk{}%
 std::forward<Args>(args))...)}
-termi\-nates with an uncaught exception, \tcode{terminate} shall be called.
+termi\-nates with an uncaught exception, \tcode{terminate} \removed{shall be}\added{is} called.
 
 
 \pnum\sync The completion of the invocation of the constructor
@@ -562,8 +570,8 @@ thread(thread&& x) noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects Constructs an object of type \tcode{thread} from \tcode{x}, and sets
-\tcode{x} to a default constructed state.
+\removed{\effects Constructs an object of type \tcode{thread} from \tcode{x}, and sets
+\tcode{x} to a default constructed state.}
 
 \pnum
 \ensures \tcode{x.get_id() == id()} and \tcode{get_id()} returns the
@@ -674,7 +682,7 @@ void detach();
 \effects The thread represented by \tcode{*this} continues execution without the calling thread
 blocking. When \tcode{detach()} returns, \tcode{*this} no longer represents the possibly continuing
 thread of execution. When the thread previously represented by \tcode{*this} ends execution, the
-implementation shall release any owned resources.
+implementation \removed{shall} release\added{s} any owned resources.
 
 \pnum\ensures \tcode{get_id() == id()}.
 
@@ -747,8 +755,9 @@ thread::id this_thread::get_id() noexcept;
 \begin{itemdescr}
 \pnum
 \returns An object of type \tcode{thread::id} that uniquely identifies the current thread of
-execution. No other thread of execution shall have this id and this thread of execution shall
-always have this id. The object returned shall not compare equal to a default constructed
+execution. No other thread of execution \removed{shall have}\added{has} this id and this 
+thread of execution \removed{shall}\added{will} always have this id. 
+The object returned \removed{shall}\added{does} not compare equal to a default constructed
 \tcode{thread::id}.
 \end{itemdescr}
 
@@ -874,20 +883,21 @@ recursive and non-recursive mutexes are supplied.
 The \defn{mutex types} are the standard library types \tcode{mutex},
 \tcode{recursive_mutex}, \tcode{timed_mutex}, \tcode{recursive_timed_mutex},
 \tcode{shared_mutex}, and \tcode{shared_timed_mutex}.
-They shall satisfy the requirements set out in this subclause. In this description, \tcode{m}
+They \removed{shall} satisfy the requirements set out in this subclause. In this description, \tcode{m}
 denotes an object of a mutex type.
 
 \pnum
-The mutex types shall satisfy the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
+The mutex types \removed{shall satisfy}\added{meet} the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
 
 \pnum
-The mutex types shall be \oldconcept{DefaultConstructible} and \oldconcept{Destructible}. If
+The mutex types \removed{shall be}\added{meet} \oldconcept{DefaultConstructible} and \oldconcept{Destructible}. If
 initialization of an object of a mutex type fails, an exception of type
-\tcode{system_error} shall be thrown. The mutex types shall not be copyable or movable.
+\tcode{system_error} \removed{shall be}\added{is} thrown. The mutex types \removed{shall}\added{are}
+not be copyable or movable.
 
 \pnum
 The error conditions for error codes, if any, reported by member functions of the mutex types
-shall be:
+\removed{shall be}\added{are as follows}:
 \begin{itemize}
 \item \tcode{resource_unavailable_try_again} --- if any native handle type manipulated is not available.
 \item \tcode{operation_not_permitted} --- if the thread does not have the
@@ -897,10 +907,10 @@ construction is incorrect.
 \end{itemize}
 
 \pnum
-The implementation shall provide lock and unlock operations, as described below.
+The implementation \removed{shall} provide\added{s} lock and unlock operations, as described below.
 For purposes of determining the existence of a data race, these behave as
 atomic operations\iref{intro.multithread}. The lock and unlock operations on
-a single mutex shall appear to occur in a single total order. \begin{note} This
+a single mutex \removed{shall} appear to occur in a single total order. \begin{note} This
 can be viewed as the modification order\iref{intro.multithread} of the
 mutex. \end{note}
 \begin{note} Construction and
@@ -909,11 +919,12 @@ synchronization should be used to ensure that mutex objects are initialized
 and visible to other threads. \end{note}
 
 \pnum
-The expression \tcode{m.lock()} shall be well-formed and have the following semantics:
+The expression \tcode{m.lock()} \removed{shall be}\added{is} well-formed 
+and \removed{have}\added{has} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{m} is of type \tcode{mutex}, \tcode{timed_mutex},
+\removed{\requires}\added{\expects} If \tcode{m} is of type \tcode{mutex}, \tcode{timed_mutex},
 \tcode{shared_mutex}, or \tcode{shared_timed_mutex}, the calling
 thread does not own the mutex.
 
@@ -927,7 +938,7 @@ thread does not own the mutex.
 \returntype \tcode{void}.
 
 \pnum
-\sync Prior \tcode{unlock()} operations on the same object shall
+\sync Prior \tcode{unlock()} operations on the same object \removed{shall}
 \term{synchronize with}\iref{intro.multithread} this operation.
 
 \pnum
@@ -945,18 +956,19 @@ that a deadlock would occur.
 \end{itemdescr}
 
 \pnum
-The expression \tcode{m.try_lock()} shall be well-formed and have the following semantics:
+The expression \tcode{m.try_lock()} \removed{shall be}\added{is} well-formed and 
+\removed{have}\added{has} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{m} is of type \tcode{mutex}, \tcode{timed_mutex},
+\removed{\requires}\added{\expects} If \tcode{m} is of type \tcode{mutex}, \tcode{timed_mutex},
 \tcode{shared_mutex}, or \tcode{shared_timed_mutex}, the calling
 thread does not own the mutex.
 
 \pnum
 \effects Attempts to obtain ownership of the mutex for the calling thread without
 blocking. If ownership is not obtained, there is no effect and \tcode{try_lock()}
-immediately returns. An implementation may fail to obtain the lock even if it is not
+immediately returns. An implementation \removed{may}\added{can} fail to obtain the lock even if it is not
 held by any other thread. \begin{note} This spurious failure is normally uncommon, but
 allows interesting implementations based on a simple
 compare and exchange\iref{atomics}.
@@ -983,11 +995,11 @@ known about the state after a failure, even in the absence of spurious failures.
 \end{itemdescr}
 
 \pnum
-The expression \tcode{m.unlock()} shall be well-formed and have the following semantics:
+The expression \tcode{m.unlock()} \removed{shall be} well-formed and \removed{have}\added{has} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread shall own the mutex.
+\removed{\requires}\added{\expects} The calling thread \removed{shall} own\added{s} the mutex.
 
 \pnum
 \effects Releases the calling thread's ownership of the mutex.
@@ -1044,14 +1056,14 @@ contains a mutex that is used to protect the reference count.
 \end{note}
 
 \pnum
-The class \tcode{mutex} shall satisfy all of the mutex
-requirements\iref{thread.mutex.requirements}. It shall be a standard-layout
+The class \tcode{mutex} \removed{shall satisfy}\added{satisfies} all of the mutex
+requirements\iref{thread.mutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
 \pnum
-\begin{note} A program may deadlock if the thread that owns a \tcode{mutex} object calls
+\begin{note} A program \removed{may}\added{can} deadlock if the thread that owns a \tcode{mutex} object calls
 \tcode{lock()} on that object. If the implementation can detect the deadlock,
-a \tcode{resource_deadlock_would_occur} error condition may be observed. \end{note}
+a \tcode{resource_deadlock_would_occur} error condition \removed{may}\added{can} be observed. \end{note}
 
 \pnum
 The behavior of a program is undefined if
@@ -1088,20 +1100,20 @@ thread to acquire ownership of that object will fail (for \tcode{try_lock()}) or
 (for \tcode{lock()}) until the first thread has completely released ownership.
 
 \pnum
-The class \tcode{recursive_mutex} shall satisfy all of the mutex
-requirements\iref{thread.mutex.requirements}. It shall be a standard-layout
+The class \tcode{recursive_mutex} \removed{shall satisfy}\added{satisfies} all of the mutex
+requirements\iref{thread.mutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
 \pnum
-A thread that owns a \tcode{recursive_mutex} object may acquire additional levels of
+A thread that owns a \tcode{recursive_mutex} object \removed{may}\added{can} acquire additional levels of
 ownership by calling \tcode{lock()} or \tcode{try_lock()} on that object. It is
-unspecified how many levels of ownership may be acquired by a single thread. If a thread
+unspecified how many levels of ownership \removed{may}\added{can} be acquired by a single thread. If a thread
 has already acquired the maximum level of ownership for a \tcode{recursive_mutex}
-object, additional calls to \tcode{try_lock()} shall fail, and additional calls to
-\tcode{lock()} shall throw an exception of type \tcode{system_error}. A thread
+object, additional calls to \tcode{try_lock()} \removed{shall}\added{will} fail, and additional calls to
+\tcode{lock()} \removed{shall}\added{will} throw an exception of type \tcode{system_error}. A thread
 shall call \tcode{unlock()} once for each level of ownership acquired by calls to
 \tcode{lock()} and \tcode{try_lock()}. Only when all levels of ownership have been
-released may ownership be acquired by another thread.
+released \removed{may}\added{can} ownership be acquired by another thread.
 
 \pnum
 The behavior of a program is undefined if:
@@ -1115,8 +1127,8 @@ The behavior of a program is undefined if:
 
 \pnum
 The \defn{timed mutex types} are the standard library types \tcode{timed_mutex},
-\tcode{recursive_timed_mutex}, and \tcode{shared_timed_mutex}. They shall
-meet the requirements set out below.
+\tcode{recursive_timed_mutex}, and \tcode{shared_timed_mutex}. They \removed{shall meet}\added{satisfy}
+the requirements set out below.
 In this description, \tcode{m} denotes an object of a mutex type,
 \tcode{rel_time} denotes an object of an
 instantiation of \tcode{duration}\iref{time.duration}, and \tcode{abs_time} denotes an
@@ -1124,16 +1136,16 @@ object of an
 instantiation of \tcode{time_point}\iref{time.point}.
 
 \pnum
-The timed mutex types shall satisfy the \oldconcept{TimedLockable}
+The timed mutex types \removed{shall satisfy}\added{meet} the \oldconcept{TimedLockable}
 requirements\iref{thread.req.lockable.timed}.
 
 \pnum
-The expression \tcode{m.try_lock_for(rel_time)} shall be well-formed and have the
-following semantics:
+The expression \tcode{m.try_lock_for(rel_time)} \removed{shall be}\added{is} well-formed 
+and \removed{have}\added{has} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{m} is of type \tcode{timed_mutex} or
+\removed{\requires}\added{\expects} If \tcode{m} is of type \tcode{timed_mutex} or
 \tcode{shared_timed_mutex}, the calling thread does not
 own the mutex.
 
@@ -1142,7 +1154,7 @@ own the mutex.
 relative timeout\iref{thread.req.timing}
 specified by \tcode{rel_time}. If the time specified by \tcode{rel_time} is less than or
 equal to \tcode{rel_time.zero()}, the function attempts to obtain ownership without blocking (as if by calling
-\tcode{try_lock()}). The function shall return within the timeout specified by
+\tcode{try_lock()}). The function \removed{shall} return\added{s} within the timeout specified by
 \tcode{rel_time} only if it has obtained ownership of the mutex object. \begin{note} As
 with \tcode{try_lock()}, there is no guarantee that ownership will be obtained if the
 lock is available, but implementations are expected to make a strong effort to do so.
@@ -1162,20 +1174,20 @@ on the same object \term{synchronize with}\iref{intro.multithread} this operatio
 \end{itemdescr}
 
 \pnum
-The expression \tcode{m.try_lock_until(abs_time)} shall be well-formed and have the
-following semantics:
+The expression \tcode{m.try_lock_until(abs_time)} \removed{shall be}\added{is} well-formed
+and \removed{have}\added{has} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{m} is of type \tcode{timed_mutex} or
+\removed{\requires}\added{\expects} If \tcode{m} is of type \tcode{timed_mutex} or
 \tcode{shared_timed_mutex}, the calling thread does not own the
 mutex.
 
 \pnum
 \effects The function attempts to obtain ownership of the mutex. If
 \tcode{abs_time} has already passed, the function attempts to obtain ownership
-without blocking (as if by calling \tcode{try_lock()}). The function shall
-return before the absolute timeout\iref{thread.req.timing} specified by
+without blocking (as if by calling \tcode{try_lock()}). The function \removed{shall}
+return\added{s} before the absolute timeout\iref{thread.req.timing} specified by
 \tcode{abs_time} only if it has obtained ownership of the mutex object.
 \begin{note} As with \tcode{try_lock()}, there is no guarantee that ownership will
 be obtained if the lock is available, but implementations are expected to make a
@@ -1231,8 +1243,8 @@ call to \tcode{try_lock_for()} or \tcode{try_lock_until()} times out (having
 failed to obtain ownership).
 
 \pnum
-The class \tcode{timed_mutex} shall satisfy all of the timed mutex
-requirements\iref{thread.timedmutex.requirements}. It shall be a standard-layout
+The class \tcode{timed_mutex} \removed{shall satisfy}\added{satisfies} all of the timed mutex
+requirements\iref{thread.timedmutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
 \pnum
@@ -1282,23 +1294,23 @@ ownership or the call to \tcode{try_lock_for()} or \tcode{try_lock_until()}
 times out (having failed to obtain ownership).
 
 \pnum
-The class \tcode{recursive_timed_mutex} shall satisfy all of the timed mutex
-requirements\iref{thread.timedmutex.requirements}. It shall be a standard-layout
+The class \tcode{recursive_timed_mutex} \removed{shall satisfy}\added{satisfies} all of the timed mutex
+requirements\iref{thread.timedmutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
 \pnum
-A thread that owns a \tcode{recursive_timed_mutex} object may acquire additional
+A thread that owns a \tcode{recursive_timed_mutex} object \removed{may}\added{can} acquire additional
 levels of ownership by calling \tcode{lock()}, \tcode{try_lock()},
 \tcode{try_lock_for()}, or \tcode{try_lock_until()} on that object. It is
-unspecified how many levels of ownership may be acquired by a single thread. If
+unspecified how many levels of ownership \removed{may}\added{can} be acquired by a single thread. If
 a thread has already acquired the maximum level of ownership for a
 \tcode{recursive_timed_mutex} object, additional calls to \tcode{try_lock()},
-\tcode{try_lock_for()}, or \tcode{try_lock_until()} shall fail, and additional
-calls to \tcode{lock()} shall throw an exception of type \tcode{system_error}. A
-thread shall call \tcode{unlock()} once for each level of ownership acquired by
+\tcode{try_lock_for()}, or \tcode{try_lock_until()} \removed{shall}\added{will} fail, and additional
+calls to \tcode{lock()} \removed{shall}\added{will} throw an exception of type \tcode{system_error}. A
+thread \removed{shall} call\added{s} \tcode{unlock()} once for each level of ownership acquired by
 calls to \tcode{lock()}, \tcode{try_lock()}, \tcode{try_lock_for()}, and
 \tcode{try_lock_until()}. Only when all levels of ownership have been released
-may ownership of the object be acquired by another thread.
+\removed{may}\added{can} ownership of the object be acquired by another thread.
 
 \pnum
 The behavior of a program is undefined if:
@@ -1313,9 +1325,9 @@ The behavior of a program is undefined if:
 
 \pnum
 The standard library types \tcode{shared_mutex} and \tcode{shared_timed_mutex}
-are \defn{shared mutex types}. Shared mutex types shall satisfy the requirements of
-mutex types\iref{thread.mutex.requirements.mutex}, and additionally
-shall satisfy the requirements set out below. In this description,
+are \defn{shared mutex types}. Shared mutex types \removed{shall satisfy}\added{meet} the requirements of
+mutex types\iref{thread.mutex.requirements.mutex}\removed{,} and \removed{additionally
+shall satisfy}\added{meet} the requirements set out below. In this description,
 \tcode{m} denotes an object of a shared mutex type.
 
 \pnum
@@ -1323,22 +1335,22 @@ In addition to the exclusive lock ownership mode specified
 in~\ref{thread.mutex.requirements.mutex}, shared mutex types provide a
 \defn{shared lock} ownership mode. Multiple execution agents can
 simultaneously hold a shared lock ownership of a shared mutex type. But no
-execution agent shall hold a shared lock while another execution agent holds an
+execution agent \removed{shall} hold\added{s} a shared lock while another execution agent holds an
 exclusive lock on the same shared mutex type, and vice-versa. The maximum
 number of execution agents which can share a shared lock on a single shared
-mutex type is unspecified, but shall be at least 10000. If more than the
+mutex type is unspecified, but \removed{shall be}\added{is} at least 10000. If more than the
 maximum number of execution agents attempt to obtain a shared lock, the
-excess execution agents shall block until the number of shared locks are
+excess execution agents \removed{shall} block until the number of shared locks are
 reduced below the maximum amount by other execution agents releasing their
 shared lock.
 
 \pnum
-The expression \tcode{m.lock_shared()} shall be well-formed and have the
+The expression \tcode{m.lock_shared()} \removed{shall be}\added{is} well-formed and \removed{have}\added{has} the
 following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread has no ownership of the mutex.
+\removed{\requires}\added{\expects} The calling thread has no ownership of the mutex.
 
 \pnum
 \effects Blocks the calling thread until shared ownership of the mutex can be obtained for the calling thread.
@@ -1351,7 +1363,7 @@ If an exception is thrown then a shared lock shall not have been acquired for th
 \returntype \tcode{void}.
 
 \pnum
-\sync Prior \tcode{unlock()} operations on the same object shall synchronize with\iref{intro.multithread} this operation.
+\sync Prior \tcode{unlock()} operations on the same object \removed{shall} synchronize with\iref{intro.multithread} this operation.
 
 \pnum
 \throws \tcode{system_error} when an exception is required\iref{thread.req.exception}.
@@ -1365,11 +1377,12 @@ If an exception is thrown then a shared lock shall not have been acquired for th
 \end{itemdescr}
 
 \pnum
-The expression \tcode{m.unlock_shared()} shall be well-formed and have the following semantics:
+The expression \tcode{m.unlock_shared()} \removed{shall be}\added{is} well-formed 
+and \removed{have}\added{has} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread shall hold a shared lock on the mutex.
+\removed{\requires}\added{\expects} The calling thread \removed{shall} hold\added{s} a shared lock on the mutex.
 
 \pnum
 \effects Releases a shared lock on the mutex held by the calling thread.
@@ -1386,17 +1399,18 @@ The expression \tcode{m.unlock_shared()} shall be well-formed and have the follo
 \end{itemdescr}
 
 \pnum
-The expression \tcode{m.try_lock_shared()} shall be well-formed and have the following semantics:
+The expression \tcode{m.try_lock_shared()} \removed{shall be}\added{is} well-formed and 
+\removed{have}\added{has} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread has no ownership of the mutex.
+\removed{\requires}\added{\expects} The calling thread has no ownership of the mutex.
 
 \pnum
 \effects Attempts to obtain shared ownership of the mutex for the calling
 thread without blocking. If shared ownership is not obtained, there is no
 effect and \tcode{try_lock_shared()} immediately returns. An implementation
-may fail to obtain the lock even if it is not held by any other thread.
+\removed{may}\added{can} fail to obtain the lock even if it is not held by any other thread.
 
 \pnum
 \returntype \tcode{bool}.
@@ -1448,9 +1462,9 @@ The class \tcode{shared_mutex} provides a non-recursive mutex
 with shared ownership semantics.
 
 \pnum
-The class \tcode{shared_mutex} shall satisfy all of the
+The class \tcode{shared_mutex} \removed{shall satisfy}\added{meets} all of the
 shared mutex requirements\iref{thread.sharedmutex.requirements}.
-It shall be a standard-layout class\iref{class.prop}.
+It \removed{shall be}\added{is} a standard-layout class\iref{class.prop}.
 
 \pnum
 The behavior of a program is undefined if:
@@ -1461,16 +1475,16 @@ The behavior of a program is undefined if:
 \end{itemize}
 
 \pnum
-\tcode{shared_mutex} may be a synonym for \tcode{shared_timed_mutex}.
+\tcode{shared_mutex} \removed{may}\added{can} be a synonym for \tcode{shared_timed_mutex}.
 
 \rSec3[thread.sharedtimedmutex.requirements]{Shared timed mutex types}
 
 \pnum
 The standard library type \tcode{shared_timed_mutex} is a
-\defn{shared timed mutex type}. Shared timed mutex types shall satisfy the requirements of
+\defn{shared timed mutex type}. Shared timed mutex types \removed{shall satisfy}\added{meet} the requirements of
 timed mutex types\iref{thread.timedmutex.requirements},
 shared mutex types\iref{thread.sharedmutex.requirements}, and additionally
-shall satisfy the requirements set out below. In this description,
+\removed{shall satisfy}\added{meet} the requirements set out below. In this description,
 \tcode{m} denotes an object of a shared timed mutex type,
 \tcode{rel_type} denotes an object of an instantiation of
 \tcode{duration}\iref{time.duration}, and
@@ -1478,12 +1492,12 @@ shall satisfy the requirements set out below. In this description,
 \tcode{time_point}\iref{time.point}.
 
 \pnum
-The expression \tcode{m.try_lock_shared_for(rel_time)} shall be well-formed and
-have the following semantics:
+The expression \tcode{m.try_lock_shared_for(rel_time)} \removed{shall be} well-formed and
+\removed{have}\added{is} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread has no ownership of the mutex.
+\removed{\requires}\added{\expects} The calling thread has no ownership of the mutex.
 
 \pnum
 \effects Attempts to obtain
@@ -1491,12 +1505,12 @@ shared lock ownership for the calling thread within the relative
 timeout\iref{thread.req.timing} specified by \tcode{rel_time}. If the time
 specified by \tcode{rel_time} is less than or equal to \tcode{rel_time.zero()},
 the function attempts to obtain ownership without blocking (as if by calling
-\tcode{try_lock_shared()}). The function shall return within the timeout
+\tcode{try_lock_shared()}). The function \removed{shall} return\added{s} within the timeout
 specified by \tcode{rel_time} only if it has obtained shared ownership of the
 mutex object. \begin{note} As with \tcode{try_lock()}, there is no guarantee that
 ownership will be obtained if the lock is available, but implementations are
 expected to make a strong effort to do so. \end{note}
-If an exception is thrown then a shared lock shall not have been acquired for
+If an exception is thrown then a shared lock \removed{shall not have}\added{has not} been acquired for
 the current thread.
 
 \pnum
@@ -1515,23 +1529,23 @@ with\iref{intro.multithread} this operation.
 \end{itemdescr}
 
 \pnum
-The expression \tcode{m.try_lock_shared_until(abs_time)} shall be well-formed
-and have the following semantics:
+The expression \tcode{m.try_lock_shared_until(abs_time)} \removed{shall be}\added{is} well-formed
+and \removed{have}\added{is} the following semantics:
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread has no ownership of the mutex.
+\removed{\requires}\added{\expects} The calling thread has no ownership of the mutex.
 
 \pnum
 \effects The function attempts to obtain shared ownership of the mutex. If
 \tcode{abs_time} has already passed, the function attempts to obtain shared
 ownership without blocking (as if by calling \tcode{try_lock_shared()}). The
-function shall return before the absolute timeout\iref{thread.req.timing}
+function \removed{shall} return\added{s} before the absolute timeout\iref{thread.req.timing}
 specified by \tcode{abs_time} only if it has obtained shared ownership of the
 mutex object. \begin{note} As with \tcode{try_lock()}, there is no guarantee that
 ownership will be obtained if the lock is available, but implementations are
 expected to make a strong effort to do so. \end{note}
-If an exception is thrown then a shared lock shall not have been acquired for
+If an exception is thrown then a shared lock \removed{shall not have}\added{has not} been acquired for
 the current thread.
 
 \pnum
@@ -1588,9 +1602,9 @@ The class \tcode{shared_timed_mutex} provides a non-recursive mutex with shared
 ownership semantics.
 
 \pnum
-The class \tcode{shared_timed_mutex} shall satisfy all of the
+The class \tcode{shared_timed_mutex} \removed{shall satisfy}\added{meets} all of the
 shared timed mutex requirements\iref{thread.sharedtimedmutex.requirements}.
-It shall be a standard-layout class\iref{class.prop}.
+It \removed{shall be}\added{is} a standard-layout class\iref{class.prop}.
 
 \pnum
 The behavior of a program is undefined if:
@@ -1603,9 +1617,9 @@ The behavior of a program is undefined if:
 \rSec2[thread.lock]{Locks}
 
 \pnum
-A \term{lock} is an object that holds a reference to a lockable object and may unlock the
+A \term{lock} is an object that holds a reference to a lockable object and \removed{may}\added{can} unlock the
 lockable object during the lock's destruction (such as when leaving block scope). An execution
-agent may use a lock to aid in managing ownership of a lockable object in an exception safe
+agent \removed{may}\added{can} use a lock to aid in managing ownership of a lockable object in an exception safe
 manner. A lock is said to \term{own} a lockable object if it is currently managing the
 ownership of that lockable object for an execution agent. A lock does not manage the lifetime
 of the lockable object it references. \begin{note} Locks are intended to ease the burden of
@@ -1664,8 +1678,8 @@ within a scope. A \tcode{lock_guard} object maintains ownership of a lockable
 object throughout the \tcode{lock_guard} object's lifetime\iref{basic.life}.
 The behavior of a program is undefined if the lockable object referenced by
 \tcode{pm} does not exist for the entire lifetime of the \tcode{lock_guard}
-object. The supplied \tcode{Mutex} type shall satisfy the \oldconcept{BasicLockable}
-requirements\iref{thread.req.lockable.basic}.
+object. The supplied \tcode{Mutex} type \removed{shall satisfy}\added{meets}
+the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
 
 \indexlibrary{\idxcode{lock_guard}!constructor}%
 \begin{itemdecl}
@@ -1674,7 +1688,7 @@ explicit lock_guard(mutex_type& m);
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{mutex_type} is not a recursive mutex,
+\removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex,
 the calling thread does not own the mutex \tcode{m}.
 
 \pnum
@@ -1688,7 +1702,7 @@ lock_guard(mutex_type& m, adopt_lock_t);
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread owns the mutex \tcode{m}.
+\removed{\requires}\added{\expects} The calling thread owns the mutex \tcode{m}.
 
 \pnum
 \effects Initializes \tcode{pm} with \tcode{m}.
@@ -1740,9 +1754,9 @@ The behavior of a program is undefined if the lockable objects referenced by
 object.
 When \tcode{sizeof...(MutexTypes)} is \tcode{1},
 the supplied \tcode{Mutex} type
-shall satisfy the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
+\removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
 Otherwise, each of the mutex types
-shall satisfy the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
+\removed{shall satisfy}\added{meet} the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
 
 \indexlibrary{\idxcode{scoped_lock}!constructor}%
 \begin{itemdecl}
@@ -1751,7 +1765,7 @@ explicit scoped_lock(MutexTypes&... m);
 
 \begin{itemdescr}
 \pnum
-\requires If a \tcode{MutexTypes} type is not a recursive mutex,
+\removed{\requires}\added{\expects} If a \tcode{MutexTypes} type is not a recursive mutex,
 the calling thread does not own the corresponding mutex element of \tcode{m}.
 
 \pnum
@@ -1768,7 +1782,7 @@ explicit scoped_lock(adopt_lock_t, MutexTypes&... m);
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread owns all the mutexes in \tcode{m}.
+\removed{\requires}\added{\expects} The calling thread owns all the mutexes in \tcode{m}.
 
 \pnum
 \effects Initializes \tcode{pm} with \tcode{tie(m...)}.
@@ -1848,14 +1862,14 @@ namespace std {
 
 \pnum
 An object of type \tcode{unique_lock} controls the ownership of a lockable
-object within a scope. Ownership of the lockable object may be acquired at
-construction or after construction, and may be transferred, after
+object within a scope. Ownership of the lockable object \removed{may}\added{can} be acquired at
+construction or after construction, and \removed{may}\added{can} be transferred, after
 acquisition, to another \tcode{unique_lock} object. Objects of type \tcode{unique_lock} are not
 copyable but are movable. The behavior of a program is undefined if the contained pointer
 \tcode{pm} is not null and the lockable object pointed
 to by \tcode{pm} does not exist for the entire remaining
 lifetime\iref{basic.life} of the \tcode{unique_lock} object. The supplied
-\tcode{Mutex} type shall satisfy the \oldconcept{BasicLockable}
+\tcode{Mutex} type \removed{shall satisfy}\added{meet} the \oldconcept{BasicLockable}
 requirements\iref{thread.req.lockable.basic}.
 
 \pnum
@@ -1874,8 +1888,8 @@ unique_lock() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\effects Constructs an object of type \tcode{unique_lock}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{unique_lock}.}
 
 \pnum
 \ensures \tcode{pm == 0} and \tcode{owns == false}.
@@ -1888,10 +1902,10 @@ explicit unique_lock(mutex_type& m);
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
+\removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
 
 \pnum
-\effects Constructs an object of type \tcode{unique_lock} and calls \tcode{m.lock()}.
+\effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.lock()}.
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == true}.
@@ -1903,8 +1917,8 @@ unique_lock(mutex_type& m, defer_lock_t) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\effects Constructs an object of type \tcode{unique_lock}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{unique_lock}.}
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == false}.
@@ -1917,13 +1931,18 @@ unique_lock(mutex_type& m, try_to_lock_t);
 
 \begin{itemdescr}
 \pnum
-\requires
+\added{\mandates 
+The supplied \tcode{Mutex} type meets the \oldconcept{Lockable}
+requirements\iref{thread.req.lockable.req}.}
+
+\added{\pnum}
+\removed{\requires
 The supplied \tcode{Mutex} type shall satisfy the \oldconcept{Lockable}
-requirements\iref{thread.req.lockable.req}.
-If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
+requirements\iref{thread.req.lockable.req}.}
+\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
 
 \pnum
-\effects Constructs an object of type \tcode{unique_lock} and calls \tcode{m.try_lock()}.
+\effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.try_lock()}.
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == res},
@@ -1937,10 +1956,10 @@ unique_lock(mutex_type& m, adopt_lock_t);
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread owns the mutex.
+\removed{\requires}\added{\expects} The calling thread owns the mutex.
 
-\pnum
-\effects Constructs an object of type \tcode{unique_lock}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{unique_lock}.}
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == true}.
@@ -1957,12 +1976,17 @@ template<class Clock, class Duration>
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{mutex_type} is not a recursive mutex the calling thread
-does not own the mutex. The supplied \tcode{Mutex} type shall satisfy the
-\oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+\added{\mandates The supplied \tcode{Mutex} type meets the
+\oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
+
+\added{\pnum}
+\removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex 
+the calling thread does not own the mutex. 
+\removed{The supplied \tcode{Mutex} type shall satisfy the
+\oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
 
 \pnum
-\effects Constructs an object of type \tcode{unique_lock} and calls \tcode{m.try_lock_until(abs_time)}.
+\effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.try_lock_until(abs_time)}.
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == res},
@@ -1978,11 +2002,14 @@ template<class Rep, class Period>
 
 \begin{itemdescr}
 \pnum
-\requires If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
-The supplied \tcode{Mutex} type shall satisfy the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+\added{\mandates The supplied \tcode{Mutex} type meets the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
+
+\added{\pnum}
+\removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
+\removed{The supplied \tcode{Mutex} type shall satisfy the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
 
 \pnum
-\effects Constructs an object of type \tcode{unique_lock} and calls \tcode{m.try_lock_for(rel_time)}.
+\effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.try_lock_for(rel_time)}.
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == res},
@@ -2059,7 +2086,8 @@ bool try_lock();
 
 \begin{itemdescr}
 \pnum
-\requires The supplied \tcode{Mutex} shall satisfy the \oldconcept{Lockable}
+\removed{\requires}\added{\mandates} The supplied \tcode{Mutex} 
+\removed{shall satisfy}\added{meets} the \oldconcept{Lockable}
 requirements\iref{thread.req.lockable.req}.
 
 \pnum
@@ -2093,7 +2121,8 @@ template<class Clock, class Duration>
 
 \begin{itemdescr}
 \pnum
-\requires The supplied \tcode{Mutex} type shall satisfy the \oldconcept{TimedLockable}
+\removed{\requires}\added{\mandates} The supplied \tcode{Mutex} type 
+\removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable}
 requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -2127,7 +2156,8 @@ template<class Rep, class Period>
 
 \begin{itemdescr}
 \pnum
-\requires The supplied \tcode{Mutex} type shall satisfy the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+\removed{\requires}\added{\mandates} The supplied \tcode{Mutex} type 
+\removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects As if by \tcode{pm->try_lock_for(rel_time)}.
@@ -2289,14 +2319,14 @@ namespace std {
 
 \pnum
 An object of type \tcode{shared_lock} controls the shared ownership of a
-lockable object within a scope. Shared ownership of the lockable object may be
-acquired at construction or after construction, and may be transferred, after
+lockable object within a scope. Shared ownership of the lockable object \removed{may}\added{can} be
+acquired at construction or after construction, and \removed{may}\added{can} be transferred, after
 acquisition, to another \tcode{shared_lock} object. Objects of type
 \tcode{shared_lock} are not copyable but are movable. The behavior of a program
 is undefined if the contained pointer \tcode{pm} is not null and the lockable
 object pointed to by \tcode{pm} does not exist for the entire remaining
 lifetime\iref{basic.life} of the \tcode{shared_lock} object. The supplied
-\tcode{Mutex} type shall satisfy the shared mutex
+\tcode{Mutex} type \removed{shall satisfy}\added{meets} the shared mutex
 requirements\iref{thread.sharedtimedmutex.requirements}.
 
 \pnum
@@ -2311,8 +2341,8 @@ shared_lock() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\effects Constructs an object of type \tcode{shared_lock}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{shared_lock}.}
 
 \pnum
 \ensures \tcode{pm == nullptr} and \tcode{owns == false}.
@@ -2325,10 +2355,10 @@ explicit shared_lock(mutex_type& m);
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread does not own the mutex for any ownership mode.
+\removed{\requires}\added{\expects} The calling thread does not own the mutex for any ownership mode.
 
 \pnum
-\effects Constructs an object of type \tcode{shared_lock} and calls \tcode{m.lock_shared()}.
+\effects \removed{Constructs an object of type \tcode{shared_lock} and calls}\added{Calls} \tcode{m.lock_shared()}.
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == true}.
@@ -2340,8 +2370,8 @@ shared_lock(mutex_type& m, defer_lock_t) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\effects Constructs an object of type \tcode{shared_lock}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{shared_lock}.}
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == false}.
@@ -2354,10 +2384,10 @@ shared_lock(mutex_type& m, try_to_lock_t);
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread does not own the mutex for any ownership mode.
+\removed{\requires}\added{\expects} The calling thread does not own the mutex for any ownership mode.
 
 \pnum
-\effects Constructs an object of type \tcode{shared_lock} and calls \tcode{m.try_lock_shared()}.
+\effects \removed{Constructs an object of type \tcode{shared_lock} and calls}\added{Calls} \tcode{m.try_lock_shared()}.
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == res}
@@ -2372,10 +2402,10 @@ shared_lock(mutex_type& m, adopt_lock_t);
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread has shared ownership of the mutex.
+\removed{\requires}\added{\expects} The calling thread has shared ownership of the mutex.
 
-\pnum
-\effects Constructs an object of type \tcode{shared_lock}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{shared_lock}.}
 
 \pnum
 \ensures \tcode{pm == addressof(m)} and \tcode{owns == true}.
@@ -2390,10 +2420,10 @@ template<class Clock, class Duration>
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread does not own the mutex for any ownership mode.
+\removed{\requires}\added{\expects} The calling thread does not own the mutex for any ownership mode.
 
 \pnum
-\effects Constructs an object of type \tcode{shared_lock} and calls
+\effects \removed{Constructs an object of type \tcode{shared_lock} and calls}\added{Calls}
 \tcode{m.try_lock_shared_until(abs_time)}.
 
 \pnum
@@ -2411,10 +2441,10 @@ template<class Rep, class Period>
 
 \begin{itemdescr}
 \pnum
-\requires The calling thread does not own the mutex for any ownership mode.
+\removed{\requires}\added{\expects} The calling thread does not own the mutex for any ownership mode.
 
 \pnum
-\effects Constructs an object of type \tcode{shared_lock} and calls
+\effects \removed{Constructs an object of type \tcode{shared_lock} and calls}\added{Calls}
 \tcode{m.try_lock_shared_for(rel_time)}.
 
 \pnum
@@ -2675,7 +2705,8 @@ template<class L1, class L2, class... L3> int try_lock(L1&, L2&, L3&...);
 
 \begin{itemdescr}
 \pnum
-\requires Each template parameter type shall satisfy the \oldconcept{Lockable} requirements. \begin{note} The
+\removed{\requires}\added{\mandates} Each template parameter type 
+\removed{shall satisfy}\added{meets} the \oldconcept{Lockable} requirements. \begin{note} The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
 \end{note}
 
@@ -2699,7 +2730,8 @@ template<class L1, class L2, class... L3> void lock(L1&, L2&, L3&...);
 
 \begin{itemdescr}
 \pnum
-\requires Each template parameter type shall satisfy the \oldconcept{Lockable} requirements,
+\removed{\requires}\added{\mandates} Each template parameter type 
+\removed{shall satisfy}\added{meets} the \oldconcept{Lockable} requirements,
 \begin{note} The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
 \end{note}
@@ -2741,7 +2773,7 @@ constexpr once_flag() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum\effects Constructs an object of type \tcode{once_flag}.
+\removed{\pnum\effects Constructs an object of type \tcode{once_flag}.}
 
 \pnum\sync The construction of a \tcode{once_flag} object is not synchronized.
 
@@ -2760,24 +2792,24 @@ template<class Callable, class... Args>
 
 \begin{itemdescr}
 \pnum
-\requires
+\removed{\requires}\added{\mandates}
 \begin{codeblock}
 @\placeholdernc{INVOKE}@(std::forward<Callable>(func), std::forward<Args>(args)...)
 \end{codeblock}
-(see \ref{func.require}) shall be a valid expression.
+(see \ref{func.require}) \removed{shall be}\added{is} a valid expression.
 
 \pnum
 \effects An execution of \tcode{call_once} that does not call its \tcode{func} is a
 \term{passive} execution. An execution of \tcode{call_once} that calls its \tcode{func}
-is an \term{active} execution. An active execution shall call
+is an \term{active} execution. An active execution \removed{shall} call\added{s}
 \tcode{\placeholdernc{INVOKE}(\brk{}%
 std::forward<Callable>(func),
 std::forward<Args>(args)...)}. If such a call to \tcode{func}
 throws an exception the execution is \term{exceptional}, otherwise it is \term{returning}.
-An exceptional execution shall propagate the exception to the caller of
+An exceptional execution \removed{shall} propagate\added{s} the exception to the caller of
 \tcode{call_once}. Among all executions of \tcode{call_once} for any given
-\tcode{once_flag}: at most one shall be a returning execution; if there is a
-returning execution, it shall be the last active execution; and there are
+\tcode{once_flag}: at most one \removed{shall be}\added{is} a returning execution; if there is a
+returning execution, it \removed{shall be}\added{is} the last active execution; and there are
 passive executions only if there is a returning execution. \begin{note} Passive
 executions allow other threads to reliably observe the results produced by the
 earlier returning execution. \end{note}
@@ -2839,8 +2871,8 @@ Condition variables permit concurrent invocation of the \tcode{wait}, \tcode{wai
 \tcode{wait_until}, \tcode{notify_one} and \tcode{notify_all} member functions.
 
 \pnum
-The execution of \tcode{notify_one} and \tcode{notify_all} shall be atomic. The
-execution of \tcode{wait}, \tcode{wait_for}, and \tcode{wait_until} shall be performed
+The execution of \tcode{notify_one} and \tcode{notify_all} \removed{shall be}\added{are} atomic. The
+execution of \tcode{wait}, \tcode{wait_for}, and \tcode{wait_until} \removed{shall be}\added{are} performed
 in three atomic parts:
 
 \begin{enumerate}
@@ -2850,7 +2882,7 @@ in three atomic parts:
 \end{enumerate}
 
 \pnum
-The implementation shall behave as if all executions of \tcode{notify_one}, \tcode{notify_all}, and each
+The implementation \removed{shall} behave\added{s} as if all executions of \tcode{notify_one}, \tcode{notify_all}, and each
 part of the \tcode{wait}, \tcode{wait_for}, and \tcode{wait_until} executions are
 executed in a single unspecified total order consistent with the "happens before" order.
 
@@ -2880,7 +2912,7 @@ void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{lk} is locked by the calling thread and either
+\removed{\requires}\added{\expects} \tcode{lk} is locked by the calling thread and either
 
 \begin{itemize}
 \item no other thread is waiting on \tcode{cond}, or
@@ -2893,7 +2925,7 @@ or \tcode{wait_until}) threads.
 \effects Transfers ownership of the lock associated with \tcode{lk} into
 internal storage and schedules \tcode{cond} to be notified when the current
 thread exits, after all objects of thread storage duration associated with
-the current thread have been destroyed. This notification shall be as if:
+the current thread have been destroyed. This notification \removed{shall be}\added{is} as if:
 \begin{codeblock}
 lk.unlock();
 cond.notify_all();
@@ -2962,7 +2994,7 @@ namespace std {
 \end{codeblock}
 
 \pnum
-The class \tcode{condition_variable} shall be a standard-layout class\iref{class.prop}.
+The class \tcode{condition_variable} \removed{shall be}\added{is} a standard-layout class\iref{class.prop}.
 
 \indexlibrary{\idxcode{condition_variable}!constructor}%
 \begin{itemdecl}
@@ -2970,8 +3002,8 @@ condition_variable();
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\effects Constructs an object of type \tcode{condition_variable}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{condition_variable}.}
 
 \pnum
 \throws \tcode{system_error} when an exception is required\iref{thread.req.exception}.
@@ -2991,8 +3023,9 @@ limitation prevents initialization.
 
 \begin{itemdescr}
 \pnum
-\requires There shall be no thread blocked on \tcode{*this}. \begin{note} That is, all
-threads shall have been notified; they may subsequently block on the lock specified in the
+\removed{\requires}\added{\expects} There \removed{shall be}\added{is} no thread blocked on \tcode{*this}.
+\begin{note} That is, all
+threads \removed{shall} have been notified; they \removed{may}\added{could} subsequently block on the lock specified in the
 wait.
 This relaxes the usual rules, which would have required all wait calls to happen before
 destruction. Only the notification to unblock the wait needs to happen before destruction.
@@ -3001,7 +3034,7 @@ been started, especially when the waiting threads are calling the wait functions
 using the overloads of \tcode{wait}, \tcode{wait_for}, or \tcode{wait_until} that take a predicate.
 \end{note}
 
-\pnum\effects Destroys the object.
+\removed{\pnum\effects Destroys the object.}
 \end{itemdescr}
 
 \indexlibrarymember{notify_one}{condition_variable}%
@@ -3029,7 +3062,7 @@ void wait(unique_lock<mutex>& lock);
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
+\removed{\requires}\added{\expects} \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
 is locked by the calling thread, and either
 \begin{itemize}
 \item no other thread is waiting on this \tcode{condition_variable} object or
@@ -3049,7 +3082,7 @@ or a call to \tcode{notify_all()}, or spuriously.
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3068,7 +3101,7 @@ template<class Predicate>
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()} is
+\removed{\requires}\added{\expects} \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()} is
 locked by the calling thread, and either
 
 \begin{itemize}
@@ -3088,7 +3121,7 @@ while (!pred())
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3109,7 +3142,7 @@ template<class Clock, class Duration>
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
+\removed{\requires}\added{\expects} \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
 is locked by the calling thread, and either
 \begin{itemize}
 \item no other thread is waiting on this \tcode{condition_variable} object or
@@ -3133,13 +3166,13 @@ expiration of the absolute timeout\iref{thread.req.timing} specified by \tcode{a
 or spuriously.
 
 \item
-If the function exits via an exception, \tcode{lock.lock()} shall be called prior to exiting the function.
+If the function exits via an exception, \tcode{lock.lock()} \removed{shall be}\added{is} called prior to exiting the function.
 \end{itemize}
 
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3165,7 +3198,7 @@ template<class Rep, class Period>
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
+\removed{\requires}\added{\expects} \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
 is locked by the calling thread, and either
 \begin{itemize}
 \item no other thread is waiting on this \tcode{condition_variable} object or
@@ -3188,7 +3221,7 @@ otherwise \tcode{cv_status::no_timeout}.
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3211,7 +3244,7 @@ template<class Clock, class Duration, class Predicate>
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()} is
+\removed{\requires}\added{\expects} \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()} is
 locked by the calling thread, and either
 
 \begin{itemize}
@@ -3233,7 +3266,7 @@ return true;
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3260,7 +3293,7 @@ template<class Rep, class Period, class Predicate>
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
+\removed{\requires}\added{\expects} \tcode{lock.owns_lock()} is \tcode{true} and \tcode{lock.mutex()}
 is locked by the calling thread, and either
 \begin{itemize}
 \item
@@ -3285,7 +3318,7 @@ timeout has already expired. \end{note}
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3305,7 +3338,7 @@ exceptions\iref{thread.req.timing} or any exception thrown by \tcode{pred}.
 \rSec2[thread.condition.condvarany]{Class \tcode{condition_variable_any}}
 
 \pnum
-A \tcode{Lock} type shall satisfy the \oldconcept{BasicLockable}
+A \tcode{Lock} type \removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable}
 requirements\iref{thread.req.lockable.basic}. \begin{note} All of the standard
 mutex types meet this requirement. If a \tcode{Lock} type other than one of the
 standard mutex types or a \tcode{unique_lock} wrapper for a standard mutex type
@@ -3350,8 +3383,8 @@ condition_variable_any();
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\effects Constructs an object of type \tcode{condition_variable_any}.
+\removed{\pnum
+\effects Constructs an object of type \tcode{condition_variable_any}.}
 
 \pnum
 \throws \tcode{bad_alloc} or \tcode{system_error} when an exception is
@@ -3375,8 +3408,8 @@ privilege to perform the operation.
 
 \begin{itemdescr}
 \pnum
-\requires There shall be no thread blocked on \tcode{*this}. \begin{note} That is, all
-threads shall have been notified; they may subsequently block on the lock specified in the
+\removed{\requires}\added{\expects} There \removed{shall be}\added{is} no thread blocked on \tcode{*this}. \begin{note} That is, all
+threads \removed{shall} have been notified; they \removed{may}\added{could} subsequently block on the lock specified in the
 wait.
 This relaxes the usual rules, which would have required all wait calls to happen before
 destruction. Only the notification to unblock the wait needs to happen before destruction.
@@ -3385,7 +3418,7 @@ been started, especially when the waiting threads are calling the wait functions
 using the overloads of \tcode{wait}, \tcode{wait_for}, or \tcode{wait_until} that take a predicate.
 \end{note}
 
-\pnum\effects Destroys the object.
+\removed{\pnum\effects Destroys the object.}
 \end{itemdescr}
 
 \indexlibrarymember{notify_one}{condition_variable_any}%
@@ -3425,7 +3458,7 @@ a call to \tcode{notify_all()}, or spuriously.
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum\ensures \tcode{lock} is locked by the calling thread.
@@ -3471,13 +3504,13 @@ expiration of the absolute timeout\iref{thread.req.timing} specified by \tcode{a
 or spuriously.
 
 \item
-If the function exits via an exception, \tcode{lock.lock()} shall be called prior to exiting the function.
+If the function exits via an exception, \tcode{lock.lock()} \removed{shall be}\added{is} called prior to exiting the function.
 \end{itemize}
 
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3515,7 +3548,7 @@ otherwise \tcode{cv_status::no_timeout}.
 \pnum
 \remarks
 If the function fails to meet the postcondition, \tcode{terminate()}
-shall be called\iref{except.terminate}.
+\removed{shall be}\added{is} called\iref{except.terminate}.
 \begin{note} This can happen if the re-locking of the mutex throws an exception. \end{note}
 
 \pnum
@@ -3669,7 +3702,7 @@ const error_category& future_category() noexcept;
 \pnum
 The object's \tcode{default_error_condition} and equivalent virtual functions shall
 behave as specified for the class \tcode{error_category}. The object's \tcode{name}
-virtual function shall return a pointer to the string \tcode{"future"}.
+virtual function \removed{shall} return\added{s} a pointer to the string \tcode{"future"}.
 \end{itemdescr}
 
 \indexlibrarymember{make_error_code}{future_errc}%
@@ -3717,8 +3750,8 @@ explicit future_error(future_errc e);
 
 \begin{itemdescr}
 \pnum
-\effects Constructs an object of class \tcode{future_error}
-and initializes \tcode{ec_} with \tcode{make_error_code(e)}.
+\effects \removed{Constructs an object of class \tcode{future_error}
+and initializes}\added{Initializes} \tcode{ec_} with \tcode{make_error_code(e)}.
 \end{itemdescr}
 
 \indexlibrarymember{code}{future_error}%
@@ -3784,7 +3817,7 @@ the shared state is destroyed; and
 the return object or provider gives up its reference to its shared state; and
 
 \item these actions will not block for the shared state to become ready, except that it
-may block if all of the following are true: the shared state was created by a call to
+\removed{may}\added{can} block if all of the following are true: the shared state was created by a call to
 \tcode{std::async}, the shared state is not yet ready, and this was the last reference
 to the shared state.
 \end{itemize}
@@ -3824,7 +3857,7 @@ second, the provider releases its shared state.
 \pnum
 A shared state is \defn{ready} only if it holds a value or an exception ready for
 retrieval.
-Waiting for a shared state to become ready may invoke code to compute the result on
+Waiting for a shared state to become ready \removed{may}\added{can} invoke code to compute the result on
 the waiting thread if so specified in the description of the class or function that creates
 the state object.
 
@@ -3845,7 +3878,7 @@ each of that thread's objects with thread storage duration\iref{basic.stc.thread
 is sequenced before making that shared state ready.
 
 \pnum
-Access to the result of the same shared state may conflict\iref{intro.multithread}.
+Access to the result of the same shared state \removed{may}\added{can} conflict\iref{intro.multithread}.
 \begin{note} This explicitly specifies that the result of the shared state is
 visible in the objects that reference this state in the sense of data race
 avoidance\iref{res.on.data.races}. For example, concurrent accesses through
@@ -3894,7 +3927,7 @@ namespace std {
 \end{codeblock}
 
 \pnum
-The implementation shall provide the template \tcode{promise} and two specializations,
+The implementation \removed{shall} provide\added{s} the template \tcode{promise} and two specializations,
 \tcode{promise<R\&>} and \tcode{promise<\brk{}void>}. These differ only in the argument type
 of the member functions \tcode{set_value} and \tcode{set_value_at_thread_exit},
 as set out in their descriptions, below.
@@ -3914,7 +3947,7 @@ template<class R, class Alloc>
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{Alloc} shall satisfy the \oldconcept{Allocator}
+\removed{\requires}\added{\mandates} \tcode{Alloc} \removed{shall satisfy}\added{meets} the \oldconcept{Allocator}
 requirements (\tref{utilities.allocator.requirements}).
 \end{itemdescr}
 
@@ -3928,7 +3961,7 @@ template<class Allocator>
 
 \begin{itemdescr}
 \pnum
-\effects Constructs a \tcode{promise} object and a shared state. The second
+\effects Constructs \removed{a \tcode{promise} object and} a shared state. The second
 constructor uses the allocator \tcode{a} to allocate memory for the shared
 state.
 \end{itemdescr}
@@ -3940,7 +3973,7 @@ promise(promise&& rhs) noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects Constructs a new \tcode{promise} object and transfers ownership of the shared state
+\effects \removed{Constructs a new \tcode{promise} object and transfers}\added{Transfers} ownership of the shared state
 of \tcode{rhs} (if any) to the newly-constructed object.
 
 \pnum
@@ -4064,7 +4097,7 @@ void set_exception(exception_ptr p);
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{p} is not null.
+\removed{\requires}\added{\expects} \tcode{p} is not null.
 
 \pnum
 \effects Atomically stores the exception pointer \tcode{p} in the shared state
@@ -4125,7 +4158,7 @@ void set_exception_at_thread_exit(exception_ptr p);
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{p} is not null.
+\removed{\requires}\added{\expects} \tcode{p} is not null.
 
 \pnum
 \effects Stores the exception pointer \tcode{p} in the shared state without
@@ -4217,7 +4250,7 @@ namespace std {
 \end{codeblock}
 
 \pnum
-The implementation shall provide the template \tcode{future} and two specializations,
+The implementation \removed{shall} provide\added{s} the template \tcode{future} and two specializations,
 \tcode{future<R\&>} and \tcode{future<\brk{}void>}. These differ only in the return type and return
 value of the member function \tcode{get}, as set out in its description, below.
 
@@ -4228,8 +4261,8 @@ future() noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects Constructs an \defnx{empty}{empty \tcode{future} object}
-\tcode{future} object that does not refer to a
+\effects \removed{Constructs an \defnx{empty}{empty \tcode{future} object}
+\tcode{future}}\added{The} object \removed{that} does not refer to a
 shared state.
 
 \pnum
@@ -4447,7 +4480,7 @@ timeout-related exceptions\iref{thread.req.timing}.
 
 \pnum
 The class template \tcode{shared_future} defines a type for asynchronous return objects
-which may share their shared state with other asynchronous return
+which \removed{may}\added{can} share their shared state with other asynchronous return
 objects. A default-constructed \tcode{shared_future}
 object has no shared state. A \tcode{shared_future} object with
 shared state can
@@ -4502,7 +4535,7 @@ namespace std {
 \end{codeblock}
 
 \pnum
-The implementation shall provide the template \tcode{shared_future} and two
+The implementation \removed{shall} provide\added{s} the template \tcode{shared_future} and two
 specializations, \tcode{shared_future<R\&>} and \tcode{shared_future<void>}. These
 differ only in the return type and return value of the member function \tcode{get}, as
 set out in its description, below.
@@ -4514,8 +4547,8 @@ shared_future() noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects Constructs an \defnx{empty}{empty \tcode{shared_future} object}
-\tcode{shared_future} object that does not refer to a
+\effects \removed{Constructs an \defnx{empty}{empty \tcode{shared_future} object}
+\tcode{shared_future}}\added{The} object \removed{that} does not refer to a
 shared state.
 
 \pnum
@@ -4529,7 +4562,7 @@ shared_future(const shared_future& rhs) noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects Constructs a \tcode{shared_future} object that refers to the same
+\effects \removed{Constructs a \tcode{shared_future} object that refers}\added{Refers} to the same
 shared state as \tcode{rhs} (if any).
 
 \pnum
@@ -4776,14 +4809,14 @@ template<class F, class... Args>
 
 \begin{itemdescr}
 \pnum
-\requires \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} shall
-satisfy the
+\removed{\requires}\added{\mandates} \tcode{F} and each $\tcode{T}_i$ in \tcode{Args}
+\removed{shall satisfy}\added{meet} the
 \oldconcept{MoveConstructible} requirements, and
 \begin{codeblock}
 @\placeholdernc{INVOKE}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)),
        @\placeholdernc{decay-copy}@(std::forward<Args>(args))...)     // see \ref{func.require}, \ref{thread.thread.constr}
 \end{codeblock}
-shall be a valid expression.
+\removed{shall be}\added{is} a valid expression.
 
 \pnum
 \effects
@@ -4795,7 +4828,7 @@ The second function creates a shared state that is associated with
 the returned \tcode{future} object.
 The further behavior
 of the second function depends on the \tcode{policy} argument as follows (if
-more than one of these conditions applies, the implementation may choose any of
+more than one of these conditions applies, the implementation \removed{may}\added{can} choose any of
 the corresponding policies):
 
 \begin{itemize}
@@ -4838,7 +4871,7 @@ The shared state is not
 made ready until the function has completed. The first call to a
 non-timed waiting function\iref{futures.state}
 on an asynchronous return object referring to
-this shared state shall invoke the
+this shared state \removed{shall} invoke\added{s} the
 deferred function in the thread that called the waiting function.
 Once evaluation of \tcode{\placeholdernc{INVOKE}(std::move(g), std::move(xyz))} begins, the function is no longer
 considered deferred.
@@ -4857,7 +4890,7 @@ in this document nor by the implementation, the behavior is undefined.
 \tcode{future<invoke_result_t<decay_t<F>, decay_t<Args>...>{>}} that refers
 to the shared state created by this call to \tcode{async}.
 \begin{note} If a future obtained from \tcode{async} is moved outside the local scope,
-other code that uses the future should be aware that the future's destructor may
+other code that uses the future should be aware that the future's destructor \removed{may}\added{can}
 block for the shared state to become ready. \end{note}
 
 \pnum
@@ -4924,7 +4957,7 @@ int work(int value) {
 \end{codeblock}
 
 \begin{note} Line \#1 might not result in concurrency because
-the \tcode{async} call uses the default policy, which may use
+the \tcode{async} call uses the default policy, which \removed{may}\added{can} use
 \tcode{launch::deferred}, in which case the lambda might not be invoked until the
 \tcode{get()} call; in that case, \tcode{work1} and \tcode{work2} are called on the
 same thread and there is no concurrency.
@@ -4992,7 +5025,7 @@ packaged_task() noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects Constructs a \tcode{packaged_task} object with no shared state and no stored task.
+\effects \removed{Constructs a \tcode{packaged_task}}\added{The} object \removed{with}\added{has} no shared state and no stored task.
 \end{itemdescr}
 
 \indexlibrary{\idxcode{packaged_task}!constructor}%
@@ -5003,19 +5036,20 @@ template<class F>
 
 \begin{itemdescr}
 \pnum
-\requires
+\removed{\requires}\added{\mandates}
 \tcode{\placeholdernc{INVOKE}<R>(f, t$_1$, t$_2$, $\dotsc$, t$_N$)}\iref{func.require}, where \tcode{t$_1$, t$_2$, $\dotsc$, t$_N$} are values
-of the corresponding types in \tcode{ArgTypes...}, shall be a valid expression. Invoking
-a copy of \tcode{f} shall behave the same as invoking \tcode{f}.
+of the corresponding types in \tcode{ArgTypes...}, \removed{shall be}\added{is} a valid expression. Invoking
+a copy of \tcode{f} \removed{shall} behave\added{s} the same as invoking \tcode{f}.
 
 \pnum
-\remarks
-This constructor shall not participate in overload resolution if \tcode{remove_cvref_t<F>}
-is the same type as \tcode{packaged_task<R(ArgTypes...)>}.
+\removed{\remarks
+This constructor shall not participate in overload resolution if}
+\added{\constraints} \tcode{remove_cvref_t<F>}
+is \added{not} the same type as \tcode{packaged_task<R(ArgTypes...)>}.
 
 \pnum
-\effects Constructs a new \tcode{packaged_task} object with a shared state and
-initializes the object's stored task with \tcode{std::forward<F>(f)}.
+\effects \removed{Constructs a new \tcode{packaged_task} object with a shared state and
+initializes}\added{Initializes} the object's stored task with \tcode{std::forward<F>(f)}.
 
 \pnum
 \throws
@@ -5031,7 +5065,7 @@ packaged_task(packaged_task&& rhs) noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects Constructs a new \tcode{packaged_task} object and transfers ownership of
+\effects \removed{Constructs a new \tcode{packaged_task} object and transfers}\added{Transfers} ownership of
 \tcode{rhs}'s shared state to \tcode{*this}, leaving \tcode{rhs} with no
 shared state. Moves the stored task from \tcode{rhs} to \tcode{*this}.
 
@@ -5165,7 +5199,7 @@ where \tcode{f} is the stored task and
 \tcode{t$_1$, t$_2$, $\dotsc$, t$_N$} are the values in \tcode{args...}. If the task returns normally,
 the return value is stored as the asynchronous result in the shared state of
 \tcode{*this}, otherwise the exception thrown by the task is stored. In either
-case, this shall be done without making that state ready\iref{futures.state} immediately. Schedules
+case, this \removed{shall be}\added{is} done without making that state ready\iref{futures.state} immediately. Schedules
 the shared state to be made ready when the current thread exits,
 after all objects of thread storage duration associated with the current thread
 have been destroyed.
