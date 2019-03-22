@@ -132,7 +132,7 @@ and hardware. The finest resolution provided by an implementation is called the
 \term{native resolution}.
 
 \pnum
-Implementation-provided clocks that are used for these functions \removed{shall satisfy}\added{meet} the
+Implementation-provided clocks that are used for these functions \removed{shall} satisfy the
 \oldconcept{TrivialClock} requirements\iref{time.clock.req}.
 
 \pnum
@@ -494,7 +494,7 @@ thread() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum\effects \removed{Constructs a \tcode{thread} object does}\added{Does} not represent a thread of execution.
+\pnum\effects \removed{Constructs a \tcode{thread}}\added{The} object does not represent a thread of execution.
 
 \pnum\ensures \tcode{get_id() == id()}.
 \end{itemdescr}
@@ -505,20 +505,21 @@ template<class F, class... Args> explicit thread(F&& f, Args&&... args);
 \end{itemdecl}
 
 \begin{itemdescr}
+
+\added{\pnum}
+\removed{\remarks}\added{\constraints} 
+\removed{This constructor shall not participate in overload resolution if} \tcode{remove_cvref_t<F>}
+is \added{not} the same type as \tcode{std::thread}.
+
 \pnum
-\removed{\requires}\added{\mandates}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} 
-\removed{shall satisfy}\added{meet} the
+\removed{\requires}\added{\expects}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} 
+\removed{shall} satisfy the
 \oldconcept{MoveConstructible} requirements.
 \tcode{%
 \placeholdernc{INVOKE}(\brk{}%
 \placeholdernc{decay-copy}(std::forward<F>(f)),%
 \placeholdernc{decay-copy}(std::forward<Args>({}args))...)}\iref{func.require}
 \removed{shall be}\added{is} a valid expression.
-
-\added{\pnum}
-\removed{\remarks}\added{\constraints} 
-\removed{This constructor shall not participate in overload resolution if} \tcode{remove_cvref_t<F>}
-is \added{not} the same type as \tcode{std::thread}.
 
 \pnum
 \effects\ \removed{Constructs an object of type \tcode{thread}.} The new thread of execution executes
@@ -880,7 +881,7 @@ They \removed{shall} satisfy the requirements set out in this subclause. In this
 denotes an object of a mutex type.
 
 \pnum
-The mutex types \removed{shall satisfy}\added{meet} the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
+The mutex types \removed{shall} satisfy the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
 
 \pnum
 The mutex types \removed{shall be}\added{meet} \oldconcept{DefaultConstructible} and \oldconcept{Destructible}. If
@@ -1129,7 +1130,7 @@ object of an
 instantiation of \tcode{time_point}\iref{time.point}.
 
 \pnum
-The timed mutex types \removed{shall satisfy}\added{meet} the \oldconcept{TimedLockable}
+The timed mutex types \removed{shall} satisfy the \oldconcept{TimedLockable}
 requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -1747,9 +1748,9 @@ The behavior of a program is undefined if the lockable objects referenced by
 object.
 When \tcode{sizeof...(MutexTypes)} is \tcode{1},
 the supplied \tcode{Mutex} type
-\removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
+\removed{shall satisfy}\added{satisfies} the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
 Otherwise, each of the mutex types
-\removed{shall satisfy}\added{meet} the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
+\removed{shall} satisfy the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
 
 \indexlibrary{\idxcode{scoped_lock}!constructor}%
 \begin{itemdecl}
@@ -1862,7 +1863,7 @@ copyable but are movable. The behavior of a program is undefined if the containe
 \tcode{pm} is not null and the lockable object pointed
 to by \tcode{pm} does not exist for the entire remaining
 lifetime\iref{basic.life} of the \tcode{unique_lock} object. The supplied
-\tcode{Mutex} type \removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable}
+\tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the \oldconcept{BasicLockable}
 requirements\iref{thread.req.lockable.basic}.
 
 \pnum
@@ -1924,15 +1925,10 @@ unique_lock(mutex_type& m, try_to_lock_t);
 
 \begin{itemdescr}
 \pnum
-\added{\mandates 
-The supplied \tcode{Mutex} type meets the \oldconcept{Lockable}
-requirements\iref{thread.req.lockable.req}.}
-
-\added{\pnum}
-\removed{\requires
-The supplied \tcode{Mutex} type shall satisfy the \oldconcept{Lockable}
-requirements\iref{thread.req.lockable.req}.}
-\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
+\removed{\requires}\added{\expects}
+The supplied \tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable}
+requirements\iref{thread.req.lockable.req}.
+If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
 
 \pnum
 \effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.try_lock()}.
@@ -1969,14 +1965,10 @@ template<class Clock, class Duration>
 
 \begin{itemdescr}
 \pnum
-\added{\mandates The supplied \tcode{Mutex} type meets the
-\oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
-
-\added{\pnum}
 \removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex 
 the calling thread does not own the mutex. 
-\removed{The supplied \tcode{Mutex} type shall satisfy the
-\oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
+The supplied \tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the
+\oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.try_lock_until(abs_time)}.
@@ -1995,11 +1987,8 @@ template<class Rep, class Period>
 
 \begin{itemdescr}
 \pnum
-\added{\mandates The supplied \tcode{Mutex} type meets the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
-
-\added{\pnum}
 \removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
-\removed{The supplied \tcode{Mutex} type shall satisfy the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.}
+The supplied \tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.try_lock_for(rel_time)}.
@@ -2079,8 +2068,8 @@ bool try_lock();
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} The supplied \tcode{Mutex} 
-\removed{shall satisfy}\added{meets} the \oldconcept{Lockable}
+\removed{\requires}\added{\expects} The supplied \tcode{Mutex} 
+\removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable}
 requirements\iref{thread.req.lockable.req}.
 
 \pnum
@@ -2114,8 +2103,8 @@ template<class Clock, class Duration>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} The supplied \tcode{Mutex} type 
-\removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable}
+\removed{\requires}\added{\expects} The supplied \tcode{Mutex} type 
+\removed{shall satisfy}\added{satisfies} the \oldconcept{TimedLockable}
 requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -2149,8 +2138,8 @@ template<class Rep, class Period>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} The supplied \tcode{Mutex} type 
-\removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+\removed{\requires}\added{\expects} The supplied \tcode{Mutex} type 
+\removed{shall satisfy}\added{satisfies} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects As if by \tcode{pm->try_lock_for(rel_time)}.
@@ -2698,8 +2687,8 @@ template<class L1, class L2, class... L3> int try_lock(L1&, L2&, L3&...);
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} Each template parameter type 
-\removed{shall satisfy}\added{meets} the \oldconcept{Lockable} requirements. \begin{note} The
+\removed{\requires}\added{\expects} Each template parameter type 
+\removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable} requirements. \begin{note} The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
 \end{note}
 
@@ -2723,8 +2712,8 @@ template<class L1, class L2, class... L3> void lock(L1&, L2&, L3&...);
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} Each template parameter type 
-\removed{shall satisfy}\added{meets} the \oldconcept{Lockable} requirements,
+\removed{\requires}\added{\expects} Each template parameter type 
+\removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable} requirements,
 \begin{note} The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
 \end{note}
@@ -2919,7 +2908,7 @@ or \tcode{wait_until}) threads.
 \effects Transfers ownership of the lock associated with \tcode{lk} into
 internal storage and schedules \tcode{cond} to be notified when the current
 thread exits, after all objects of thread storage duration associated with
-the current thread have been destroyed. This notification \removed{shall be as if}\added{is equilivant to}:
+the current thread have been destroyed. This notification \removed{shall be as if}\added{is equilavent to}:
 \begin{codeblock}
 lk.unlock();
 cond.notify_all();
@@ -3333,7 +3322,7 @@ exceptions\iref{thread.req.timing} or any exception thrown by \tcode{pred}.
 \rSec2[thread.condition.condvarany]{Class \tcode{condition_variable_any}}
 
 \pnum
-A \tcode{Lock} type \removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable}
+A \tcode{Lock} type \removed{shall satisfy}\added{satisfies} the \oldconcept{BasicLockable}
 requirements\iref{thread.req.lockable.basic}. \begin{note} All of the standard
 mutex types meet this requirement. If a \tcode{Lock} type other than one of the
 standard mutex types or a \tcode{unique_lock} wrapper for a standard mutex type
@@ -3942,7 +3931,7 @@ template<class R, class Alloc>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} \tcode{Alloc} \removed{shall satisfy}\added{meets} the \oldconcept{Allocator}
+\removed{\requires}\added{\expects} \tcode{Alloc} \removed{shall satisfy}\added{satisfies} the \oldconcept{Allocator}
 requirements (\tref{utilities.allocator.requirements}).
 \end{itemdescr}
 
@@ -4257,7 +4246,7 @@ future() noexcept;
 \begin{itemdescr}
 \pnum
 \effects \removed{Constructs an \defnx{empty}{empty \tcode{future} object}
-\tcode{future} object that does}\added{Does} not refer to a
+\tcode{future} object that does}\added{The object does} not refer to a
 shared state.
 
 \pnum
@@ -4543,7 +4532,7 @@ shared_future() noexcept;
 \begin{itemdescr}
 \pnum
 \effects \removed{Constructs an \defnx{empty}{empty \tcode{shared_future} object}
-\tcode{shared_future} object that does}\added{Does} not refer to a
+\tcode{shared_future} object that does}\added{The object does} not refer to a
 shared state.
 
 \pnum
@@ -4557,7 +4546,7 @@ shared_future(const shared_future& rhs) noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects \removed{Constructs a \tcode{shared_future} object that refers}\added{Refers} to the same
+\effects \removed{Constructs a \tcode{shared_future} object that refers}\added{The object refers} to the same
 shared state as \tcode{rhs} (if any).
 
 \pnum
@@ -4804,14 +4793,16 @@ template<class F, class... Args>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\mandates} \tcode{F} and each $\tcode{T}_i$ in \tcode{Args}
-\removed{shall satisfy}\added{meet} the
-\oldconcept{MoveConstructible} requirements, and
+\removed{\requires}\added{\mandates} \removed{\tcode{F} and each $\tcode{T}_i$ in \tcode{Args}
+shall satisfy the \oldconcept{MoveConstructible} requirements, and}
 \begin{codeblock}
 @\placeholdernc{INVOKE}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)),
        @\placeholdernc{decay-copy}@(std::forward<Args>(args))...)     // see \ref{func.require}, \ref{thread.thread.constr}
 \end{codeblock}
 \removed{shall be}\added{is} a valid expression.
+
+\added{\pnum
+\expects \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} satisfy the \oldconcept{MoveConstructible} requirements.}
 
 \pnum
 \effects
@@ -5020,7 +5011,7 @@ packaged_task() noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects \removed{Constructs a \tcode{packaged_task} object with}\added{Has} no shared state and no stored task.
+\effects \removed{Constructs a \tcode{packaged_task} object with}\added{The object has} no shared state and no stored task.
 \end{itemdescr}
 
 \indexlibrary{\idxcode{packaged_task}!constructor}%
@@ -5029,18 +5020,25 @@ template<class F>
   packaged_task(F&& f);
 \end{itemdecl}
 
+\added{\pnum
+\constraints \\ \tcode{remove_cvref_t<F>}
+is not the same type as \tcode{packaged_task<R(ArgTypes...)>}.}
+
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\mandates}
 \tcode{\placeholdernc{INVOKE}<R>(f, t$_1$, t$_2$, $\dotsc$, t$_N$)}\iref{func.require}, where \tcode{t$_1$, t$_2$, $\dotsc$, t$_N$} are values
-of the corresponding types in \tcode{ArgTypes...}, \removed{shall be}\added{is} a valid expression. Invoking
-a copy of \tcode{f} \removed{shall} behave\added{s} the same as invoking \tcode{f}.
+of the corresponding types in \tcode{ArgTypes...}, \removed{shall be}\added{is} a valid expression.\removed{ Invoking
+a copy of \tcode{f} shall behave the same as invoking \tcode{f}.}
 
-\pnum
-\removed{\remarks
-This constructor shall not participate in overload resolution if}
-\added{\constraints} \\ \tcode{remove_cvref_t<F>}
-is \added{not} the same type as \tcode{packaged_task<R(ArgTypes...)>}.
+\added{\pnum
+\expects Invoking a copy of \tcode{f} behaves the same as invoking \tcode{f}.}
+
+\removed{\pnum
+\remarks
+This constructor shall not participate in overload resolution if
+\tcode{remove_cvref_t<F>}
+is the same type as \tcode{packaged_task<R(ArgTypes...)>}.}
 
 \pnum
 \effects \removed{Constructs a new \tcode{packaged_task} object with a shared state and
