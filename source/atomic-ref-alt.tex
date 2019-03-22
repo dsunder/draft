@@ -1,0 +1,457 @@
+%!TEX root = std.tex
+\section*{Motivation}
+
+The current specification of \tcode{atomic_ref} implicitly requires that implementations
+use a lock array to implement \tcode{atomic_ref} when \tcode{is_lock_free()} 
+is \tcode{false}.  This is undesirable for at least two reasons. 
+First, it forces implementations have a universally available lock array.
+Second, the length of the lock array and how locks are assigned to \tcode{atomic_ref} objects
+can have significant performance effects on the underlying code.
+
+
+The following proposal should allow for more implementation freedom are improved control
+of the performance of \tcode{atomic_ref} on non lock-free types.
+
+
+\section*{Proposed Wording}
+
+\textbf{\textit{This font is used to provide guidance to the editors.}} \\
+
+\textbf{\textit{Make the following changes in [atomics.ref.generic].}} \\
+
+\indexlibrary{\idxcode{atomic_ref}}%
+\indexlibrarymember{value_type}{atomic_ref}%
+\begin{codeblock}
+namespace std {
+  template<class T@\added{, class Lock = mutex}@> struct atomic_ref {
+  private:
+    T* ptr;      // \expos
+    @\added{Lock* lock; // \expos}@
+  public:
+    using value_type = T;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    atomic_ref& operator=(const atomic_ref&) = delete;
+
+    explicit atomic_ref(T&@\added{, Lock* = nullptr}@);
+    atomic_ref(const atomic_ref&) noexcept;
+
+    T operator=(T) const noexcept;
+    operator T() const noexcept;
+
+    bool is_lock_free() const noexcept;
+    void store(T, memory_order = memory_order_seq_cst) const noexcept;
+    T load(memory_order = memory_order_seq_cst) const noexcept;
+    T exchange(T, memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_weak(T&, T,
+                               memory_order, memory_order) const noexcept;
+    bool compare_exchange_strong(T&, T,
+                                 memory_order, memory_order) const noexcept;
+    bool compare_exchange_weak(T&, T,
+                               memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_strong(T&, T,
+                                 memory_order = memory_order_seq_cst) const noexcept;
+  };
+}
+\end{codeblock}
+~\\
+
+\textbf{\textit{Make the following changes in [atomics.ref.operations].}} \\
+
+\begin{itemdecl}
+atomic_ref(T& obj\added{, Lock* lk = nullptr});
+\end{itemdecl}
+
+\begin{itemdescr}
+\begin{addedblock}
+\pnum
+\constraints The \tcode{Lock} type meets the \oldconcept{BasicLockable} requirements.
+\end{addedblock}
+
+\pnum
+\removed{\requires}\added{\expects} The referenced object shall be aligned to \tcode{required_alignment} 
+\begin{addedblock}
+and type \tcode{Lock} meets the \oldconcept{BasicLockable} requirements.
+If \tcode{is_lock_free()} is \tcode{false} then \tcode{lk} is not equivalent to 
+\tcode{nullptr}. Furthermore, if \tcode{is_lock_free()} is \tcode{false}, then all \tcode{atomic_ref} objects which 
+exist concurrently whose \tcode{*ptr} values are equivalent are constructed 
+such that \tcode{*lock} refers to the same \tcode{Lock} object.
+\end{addedblock}
+
+\pnum
+\effects \removed{Constructs an atomic reference that references the object.}\\
+\begin{addedblock}Equivalent to:
+\begin{codeblock}
+  ptr = &obj;
+  lock = is_lock_free() ? nullptr : lk;
+\end{codeblock}
+\end{addedblock}
+
+\pnum
+\throws Nothing.
+\end{itemdescr}
+
+\begin{itemdecl}
+atomic_ref(const atomic_ref& ref) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects \removed{Constructs an atomic reference
+that references the object referenced by \tcode{ref}.}
+\begin{addedblock}Equivalent to:
+\begin{codeblock}
+  ptr = ref.obj;
+  lock = ref.lock;
+\end{codeblock}
+\end{addedblock}
+
+\end{itemdescr}
+
+\begin{itemdecl}
+void store(T desired, memory_order order = memory_order_seq_cst) const noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\removed{\requires}\added{\expects} The \tcode{order} argument shall not be
+\tcode{memory_order_consume},
+\tcode{memory_order_acquire}, nor
+\tcode{memory_order_acq_rel}.
+
+\pnum
+\effects \added{If \tcode{is_lock_free()} is \tcode{true}}
+\removed{A}\added{a}tomically replaces the value referenced by \tcode{*ptr}
+with the value of \tcode{desired}.
+\added{Otherwise, equivalent to:}
+\begin{addedblock}
+\begin{codeblock}
+  lock->lock();
+  memcpy(ptr, &desired, sizeof(T));
+  lock->unlock();
+\end{codeblock}
+\end{addedblock}
+Memory is affected according to the value of \tcode{order}.
+\end{itemdescr}
+
+\begin{itemdecl}
+T load(memory_order order = memory_order_seq_cst) const noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\removed{\requires}\added{\expects} The \tcode{order} argument shall not be
+\tcode{memory_order_release} nor \tcode{memory_order_acq_rel}.
+
+\pnum
+\effects \added{If \tcode{is_lock_free()} is \tcode{true} 
+atomically returns the value referenced by \tcode{*ptr}.
+Otherwise, equivalent to:}
+\begin{addedblock}
+\begin{codeblock}
+  T result;
+  lock->lock();
+  memcpy(&result, ptr, sizeof(T));
+  lock->unlock();
+  return result;
+\end{codeblock}
+\end{addedblock}
+Memory is affected according to the value of \tcode{order}.
+
+\removed{
+\pnum
+\returns Atomically returns the value referenced by \tcode{*ptr}.
+}
+\end{itemdescr}
+
+\begin{itemdecl}
+T exchange(T desired, memory_order order = memory_order_seq_cst) const noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects \added{If \tcode{is_lock_free()} is \tcode{true}}
+\removed{A}\added{a}tomically replaces the value referenced by \tcode{*ptr}
+with \tcode{desired} \added{and return the value previously referenced by \tcode{*ptr}.
+Otherwise, equivalent to:}
+\begin{addedblock}
+\begin{codeblock}
+  T result;
+  lock->lock();
+  memcpy(&result, ptr, sizeof(T));
+  memcpy(ptr, &desired, sizeof(T));
+  lock->unlock();
+  return result;
+\end{codeblock}
+\end{addedblock}
+Memory is affected according to the value of \tcode{order}.
+This operation is an atomic read-modify-write operation\iref{intro.multithread}.
+
+\begin{removedblock}
+\pnum
+\returns Atomically returns the value referenced by \tcode{*ptr}
+immediately before the effects.
+\end{removedblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+bool compare_exchange_weak(T& expected, T desired,
+                           memory_order success, memory_order failure) const noexcept;
+
+bool compare_exchange_strong(T& expected, T desired,
+                             memory_order success, memory_order failure) const noexcept;
+
+bool compare_exchange_weak(T& expected, T desired,
+                           memory_order order = memory_order_seq_cst) const noexcept;
+
+bool compare_exchange_strong(T& expected, T desired,
+                             memory_order order = memory_order_seq_cst) const noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\requires The \tcode{failure} argument shall not be
+\tcode{memory_order_release} nor \tcode{memory_order_acq_rel}.
+
+\pnum
+\effects
+\begin{addedblock}
+When only one \tcode{memory_order} argument is supplied,
+the value of \tcode{success} is \tcode{order}, and
+the value of \tcode{failure} is \tcode{order}
+except that a value of \tcode{memory_order_acq_rel} shall be replaced by
+the value \tcode{memory_order_acquire} and
+a value of \tcode{memory_order_release} shall be replaced by
+the value \tcode{memory_order_relaxed}.
+
+\end{addedblock}
+\added{If \tcode{is_lock_free()} is \tcode{true}}
+\removed{R}\added{r}etrieves the value in \tcode{expected}.
+It then atomically compares the value representation of
+the value referenced by \tcode{*ptr} for equality
+with that previously retrieved from \tcode{expected},
+and if \tcode{true}, replaces the value referenced by \tcode{*ptr}
+with that in \tcode{desired}.
+If and only if the comparison is \tcode{true},
+memory is affected according to the value of \tcode{success}, and
+if the comparison is \tcode{false},
+memory is affected according to the value of \tcode{failure}.
+
+\begin{removedblock}
+When only one \tcode{memory_order} argument is supplied,
+the value of \tcode{success} is \tcode{order}, and
+the value of \tcode{failure} is \tcode{order}
+except that a value of \tcode{memory_order_acq_rel} shall be replaced by
+the value \tcode{memory_order_acquire} and
+a value of \tcode{memory_order_release} shall be replaced by
+the value \tcode{memory_order_relaxed}.
+\end{removedblock}
+If and only if the comparison is \tcode{false} then,
+after the atomic operation,
+the value in \tcode{expected} is replaced by
+the value read from the value referenced by \tcode{*ptr}
+during the atomic comparison.
+If the operation returns \tcode{true},
+these operations are atomic read-modify-write operations\iref{intro.races}
+on the value referenced by \tcode{*ptr}.
+Otherwise, these operations are atomic load operations on that memory.
+
+\begin{addedblock}
+\pnum
+\added{If \tcode{is_lock_free()} is \tcode{false}} equivalent to:
+\begin{codeblock}
+  T old;
+  bool result;
+  lock->lock();
+  memcpy(&old, ptr, sizeof(T));
+  result = 0 == memcmp(ptr, &old, sizeof(T);
+  if (result) 
+    memcpy(ptr, &desired, sizeof(T));
+  else 
+    memcpy(&expected, &old, sizeof(T));
+  lock->unlock();
+  return result;
+\end{codeblock}
+\end{addedblock}
+
+\pnum
+\returns The result of the comparison.
+
+\pnum
+\remarks A weak compare-and-exchange operation may fail spuriously.
+That is, even when the contents of memory referred to
+by \tcode{expected} and \tcode{ptr} are equal,
+it may return \tcode{false} and
+store back to \tcode{expected} the same memory contents
+that were originally there.
+\begin{note}
+This spurious failure enables implementation of compare-and-exchange
+on a broader class of machines, e.g., load-locked store-conditional machines.
+A consequence of spurious failure is
+that nearly all uses of weak compare-and-exchange will be in a loop.
+When a compare-and-exchange is in a loop,
+the weak version will yield better performance on some platforms.
+When a weak compare-and-exchange would require a loop and
+a strong one would not, the strong one is preferable.
+\end{note}
+\end{itemdescr}
+
+~\\
+~\\
+
+\textbf{\textit{Make the following changes in [atomics.ref.int].}} \\
+
+\begin{codeblock}
+namespace std {
+  template<@\added{Lock}@> struct atomic_ref<@\placeholder{integral}\added{, Lock}@> {
+  private:
+    @\placeholder{integral}@* ptr;        // \expos
+    @\added{Lock* lock;  // \expos}@
+  public:
+    using value_type = @\placeholder{integral}@;
+    using difference_type = value_type;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    atomic_ref& operator=(const atomic_ref&) = delete;
+
+    explicit atomic_ref(@\placeholder{integral}@&@\added{, Lock* = nullptr}@);
+    atomic_ref(const atomic_ref&) noexcept;
+
+    @\placeholdernc{integral}@ operator=(@\placeholder{integral}@) const noexcept;
+    operator @\placeholdernc{integral}@() const noexcept;
+
+    bool is_lock_free() const noexcept;
+    void store(@\placeholdernc{integral}@, memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholdernc{integral}@ load(memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholdernc{integral}@ exchange(@\placeholdernc{integral}@,
+                      memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_weak(@\placeholder{integral}@&, @\placeholder{integral}@,
+                               memory_order, memory_order) const noexcept;
+    bool compare_exchange_strong(@\placeholder{integral}@&, @\placeholder{integral}@,
+                                 memory_order, memory_order) const noexcept;
+    bool compare_exchange_weak(@\placeholder{integral}@&, @\placeholder{integral}@,
+                               memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_strong(@\placeholder{integral}@&, @\placeholder{integral}@,
+                                 memory_order = memory_order_seq_cst) const noexcept;
+
+    @\placeholdernc{integral}@ fetch_add(@\placeholdernc{integral}@,
+                       memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholdernc{integral}@ fetch_sub(@\placeholdernc{integral}@,
+                       memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholdernc{integral}@ fetch_and(@\placeholdernc{integral}@,
+                       memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholdernc{integral}@ fetch_or(@\placeholdernc{integral}@,
+                      memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholdernc{integral}@ fetch_xor(@\placeholdernc{integral}@,
+                       memory_order = memory_order_seq_cst) const noexcept;
+
+    @\placeholdernc{integral}@ operator++(int) const noexcept;
+    @\placeholdernc{integral}@ operator--(int) const noexcept;
+    @\placeholdernc{integral}@ operator++() const noexcept;
+    @\placeholdernc{integral}@ operator--() const noexcept;
+    @\placeholdernc{integral}@ operator+=(@\placeholdernc{integral}@) const noexcept;
+    @\placeholdernc{integral}@ operator-=(@\placeholdernc{integral}@) const noexcept;
+    @\placeholdernc{integral}@ operator&=(@\placeholdernc{integral}@) const noexcept;
+    @\placeholdernc{integral}@ operator|=(@\placeholdernc{integral}@) const noexcept;
+    @\placeholdernc{integral}@ operator^=(@\placeholdernc{integral}@) const noexcept;
+  };
+}
+\end{codeblock}
+
+\textbf{\textit{Make the following changes in [atomics.ref.float].}} \\
+
+\begin{codeblock}
+namespace std {
+  template<@\added{Lock}@> struct atomic_ref<@\placeholder{floating-point}\added{, Lock}@> {
+  private:
+    @\placeholder{floating-point}@* ptr;  // \expos
+    @\added{Lock* lock;  // \expos}@
+  public:
+    using value_type = @\placeholder{floating-point}@;
+    using difference_type = value_type;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    atomic_ref& operator=(const atomic_ref&) = delete;
+
+    explicit atomic_ref(@\placeholder{floating-point}@&@\added{, Lock* = nullptr}@);
+    atomic_ref(const atomic_ref&) noexcept;
+
+    @\placeholder{floating-point}@ operator=(@\placeholder{floating-point}@) noexcept;
+    operator @\placeholdernc{floating-point}@() const noexcept;
+
+    bool is_lock_free() const noexcept;
+    void store(@\placeholder{floating-point}@, memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholder{floating-point}@ load(memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholder{floating-point}@ exchange(@\placeholder{floating-point}@,
+                            memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_weak(@\placeholder{floating-point}@&, @\placeholder{floating-point}@,
+                               memory_order, memory_order) const noexcept;
+    bool compare_exchange_strong(@\placeholder{floating-point}@&, @\placeholder{floating-point}@,
+                                 memory_order, memory_order) const noexcept;
+    bool compare_exchange_weak(@\placeholder{floating-point}@&, @\placeholder{floating-point}@,
+                               memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_strong(@\placeholder{floating-point}@&, @\placeholder{floating-point}@,
+                                 memory_order = memory_order_seq_cst) const noexcept;
+
+    @\placeholder{floating-point}@ fetch_add(@\placeholder{floating-point}@,
+                             memory_order = memory_order_seq_cst) const noexcept;
+    @\placeholder{floating-point}@ fetch_sub(@\placeholder{floating-point}@,
+                             memory_order = memory_order_seq_cst) const noexcept;
+
+    @\placeholder{floating-point}@ operator+=(@\placeholder{floating-point}@) const noexcept;
+    @\placeholder{floating-point}@ operator-=(@\placeholder{floating-point}@) const noexcept;
+  };
+}
+\end{codeblock}
+
+\textbf{\textit{Make the following changes in [atomics.ref.pointer].}} \\
+
+\begin{codeblock}
+namespace std {
+  template<class T@\added{, Lock}@> struct atomic_ref<T*@\added{, Lock}@> {
+  private:
+    T** ptr;              // \expos
+    @\added{Lock* lock;  // \expos}@
+  public:
+    using value_type = T*;
+    using difference_type = ptrdiff_t;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    atomic_ref& operator=(const atomic_ref&) = delete;
+
+    explicit atomic_ref(T*&@\added{, Lock* = nullptr}@);
+    atomic_ref(const atomic_ref&) noexcept;
+
+    T* operator=(T*) const noexcept;
+    operator T*() const noexcept;
+
+    bool is_lock_free() const noexcept;
+    void store(T*, memory_order = memory_order_seq_cst) const noexcept;
+    T* load(memory_order = memory_order_seq_cst) const noexcept;
+    T* exchange(T*, memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_weak(T*&, T*,
+                               memory_order, memory_order) const noexcept;
+    bool compare_exchange_strong(T*&, T*,
+                                 memory_order, memory_order) const noexcept;
+    bool compare_exchange_weak(T*&, T*,
+                               memory_order = memory_order_seq_cst) const noexcept;
+    bool compare_exchange_strong(T*&, T*,
+                                 memory_order = memory_order_seq_cst) const noexcept;
+
+    T* fetch_add(difference_type, memory_order = memory_order_seq_cst) const noexcept;
+    T* fetch_sub(difference_type, memory_order = memory_order_seq_cst) const noexcept;
+
+    T* operator++(int) const noexcept;
+    T* operator--(int) const noexcept;
+    T* operator++() const noexcept;
+    T* operator--() const noexcept;
+    T* operator+=(difference_type) const noexcept;
+    T* operator-=(difference_type) const noexcept;
+  };
+}
+\end{codeblock}
+

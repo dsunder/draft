@@ -6,12 +6,11 @@
 \thispagestyle{empty}
 \begingroup
 \def\hd{\begin{tabular}{ll}
-          \textbf{Document Number:} & {\larger\docno}             \\
-          \textbf{Date:}            & \reldate                    \\
-          \textbf{Revises:}         & \prevdocno                  \\
-          \textbf{Reply to:}        & Richard Smith               \\
-                                    & Google Inc                  \\
-                                    & cxxeditor@gmail.com
+          \textbf{Document Number:} & DXXXXR0                      \\
+          \textbf{Date:}            & \reldate                     \\
+          \textbf{Reply to:}        & Daniel Sunderland            \\
+                                    & Sandia National Laboratories \\
+                                    & dsunder@sandia.gov
           \end{tabular}
 }
 \newlength{\hdwidth}
@@ -22,10 +21,14 @@
 \vspace{2.5cm}
 \begin{center}
 \textbf{\Huge
-Working Draft, Standard for Programming Language \Cpp{}}
+Alternate \tcode{atomic_ref} for Non-Lockfree Types}
 \end{center}
-\vfill
-\textbf{Note: this is an early draft. It's known to be incomplet and
-  incorrekt, and it has lots of
-  b\kern-1.2pta\kern1ptd\hspace{1.5em}for\kern-3ptmat\kern0.6ptti\raise0.15ex\hbox{n}g.}
+
+
+
+\begin{verbatim}
+git clone git@github.com:dsunder/draft.git dsunder-draft
+cd dsunder-draft
+git checkout atomic_ref_alt
+\end{verbatim}
 \newpage
