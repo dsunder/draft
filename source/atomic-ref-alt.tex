@@ -1,17 +1,8 @@
 %!TEX root = std.tex
 \section*{Motivation}
 
-The current specification of \tcode{atomic_ref} implicitly requires that implementations
-use a lock array to implement \tcode{atomic_ref} when \tcode{is_lock_free()} 
-is \tcode{false}.  This is undesirable for at least two reasons. 
-First, it forces implementations have a universally available lock array.
-Second, the length of the lock array and how locks are assigned to \tcode{atomic_ref} objects
-can have significant performance effects on the underlying code.
-
-
-The following proposal should allow for more implementation freedom are improved control
-of the performance of \tcode{atomic_ref} on non lock-free types.
-
+Enable implementations of \tcode{atomic_ref} which do not require a global lock array
+while perserving current behavior as much as possible.
 
 \section*{Proposed Wording}
 
@@ -30,7 +21,11 @@ namespace std {
   public:
     using value_type = T;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{whether a given \tcode{atomic_ref} type's operations never require a user provided lock};}@
     static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
@@ -60,23 +55,69 @@ namespace std {
 \textbf{\textit{Make the following changes in [atomics.ref.operations].}} \\
 
 \begin{itemdecl}
+static constexpr bool is_always_lock_free;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+The static data member \tcode{is_always_lock_free} is \tcode{true}
+if the \tcode{atomic_ref} type's operations are always lock-free
+\added{on objects aligned to \tcode{required_alignment}},
+and \tcode{false} otherwise.
+\end{itemdescr}
+
+\begin{addedblock}
+\begin{itemdecl}
+static constexpr bool never_requires_user_lock;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+The static data member \tcode{never_requires_user_lock} is \tcode{true}
+if the \tcode{atomic_ref} type's operations never require the user to provide a
+valid pointer to a \tcode{Lock} object. 
+\end{itemdescr}
+\end{addedblock}
+
+\begin{addedblock}
+\begin{itemdecl}
+static is_lock_free(T& obj); noexcept
+\end{itemdecl}
+
+\begin{itemdescr}
+\returns Returns \tcode{true} if atomic operations on the object referenced by
+\tcode{obj} can be lock-free.
+\end{itemdescr}
+
+\begin{itemdecl}
+static requires_user_lock(T& obj); noexcept
+\end{itemdecl}
+
+\begin{itemdescr}
+\returns Returns \tcode{true} if \tcode{atomic_ref} requires the user to
+provide a valid pointer to a \tcode{Lock} object when constructing an 
+\tcode{atomic_ref} from \tcode{obj}. 
+\begin{note}
+Implementations could provide ways for \tcode{atomic_ref} to use 
+implementation defined locking mechanisms when \tcode{is_lock_free(obj)} is \tcode{false}.
+\end{note}
+\end{itemdescr}
+\end{addedblock}
+
+\begin{itemdecl}
 atomic_ref(T& obj\added{, Lock* lk = nullptr});
 \end{itemdecl}
 
 \begin{itemdescr}
-\begin{addedblock}
 \pnum
-\constraints The \tcode{Lock} type meets the \oldconcept{BasicLockable} requirements.
-\end{addedblock}
-
-\pnum
-\removed{\requires}\added{\expects} The referenced object shall be aligned to \tcode{required_alignment} 
+\removed{\requires The referenced object shall be aligned to \tcode{required_alignment}} 
 \begin{addedblock}
-and type \tcode{Lock} meets the \oldconcept{BasicLockable} requirements.
-If \tcode{is_lock_free()} is \tcode{false} then \tcode{lk} is not equivalent to 
-\tcode{nullptr}. Furthermore, if \tcode{is_lock_free()} is \tcode{false}, then all \tcode{atomic_ref} objects which 
-exist concurrently whose \tcode{*ptr} values are equivalent are constructed 
-such that \tcode{*lock} refers to the same \tcode{Lock} object.
+\expects The type \tcode{Lock} meets the \oldconcept{BasicLockable} requirements
+and \tcode{lk} points to the  the same address for all \tcode{atomic_ref} which 
+reference the object referenced by \tcode{obj}.
+If \tcode{is_lock_free(obj)} is \tcode{false} and \tcode{requires_user_lock(obj)} is \tcode{false}
+then \tcode{lk} points to either a valid \tcode{Lock} object or \tcode{nullptr}.
+If \tcode{requires_user_lock} is \tcode{true} then \tcode{lk} points to valid \tcode{Lock} object.
 \end{addedblock}
 
 \pnum
@@ -84,7 +125,7 @@ such that \tcode{*lock} refers to the same \tcode{Lock} object.
 \begin{addedblock}Equivalent to:
 \begin{codeblock}
   ptr = &obj;
-  lock = is_lock_free() ? nullptr : lk;
+  lock = is_lock_free(obj) ? nullptr : lk;
 \end{codeblock}
 \end{addedblock}
 
@@ -121,11 +162,15 @@ void store(T desired, memory_order order = memory_order_seq_cst) const noexcept;
 \tcode{memory_order_acq_rel}.
 
 \pnum
-\effects \added{If \tcode{is_lock_free()} is \tcode{true}}
-\removed{A}\added{a}tomically replaces the value referenced by \tcode{*ptr}
-with the value of \tcode{desired}.
-\added{Otherwise, equivalent to:}
+\removed{Atomically replaces the value referenced by \tcode{*ptr}
+with the value of \tcode{desired}}.
 \begin{addedblock}
+\effects If \tcode{lock} is equivalent to \tcode{nullptr}
+then the operation is equivalent to atomically performing the following:
+\begin{codeblock}
+  memcpy(ptr, &desired, sizeof(T));
+\end{codeblock}
+Otherwise, equivalent to:
 \begin{codeblock}
   lock->lock();
   memcpy(ptr, &desired, sizeof(T));
@@ -144,11 +189,16 @@ T load(memory_order order = memory_order_seq_cst) const noexcept;
 \removed{\requires}\added{\expects} The \tcode{order} argument shall not be
 \tcode{memory_order_release} nor \tcode{memory_order_acq_rel}.
 
-\pnum
-\effects \added{If \tcode{is_lock_free()} is \tcode{true} 
-atomically returns the value referenced by \tcode{*ptr}.
-Otherwise, equivalent to:}
 \begin{addedblock}
+\pnum
+\effects If \tcode{lock} is equivalent to \tcode{nullptr} then the
+operation is equivalent to atomically performing the following:
+\begin{codeblock}
+  T result;
+  memcpy(&result, ptr, sizeof(T));
+  return result;
+\end{codeblock}
+Otherwise, equivalent to:
 \begin{codeblock}
   T result;
   lock->lock();
@@ -171,11 +221,18 @@ T exchange(T desired, memory_order order = memory_order_seq_cst) const noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects \added{If \tcode{is_lock_free()} is \tcode{true}}
-\removed{A}\added{a}tomically replaces the value referenced by \tcode{*ptr}
-with \tcode{desired} \added{and return the value previously referenced by \tcode{*ptr}.
-Otherwise, equivalent to:}
+\removed{Atomically replaces the value referenced by \tcode{*ptr}
+with \tcode{desired}.}
 \begin{addedblock}
+\effects \added{If \tcode{lock} is equivalent to \tcode{nullptr}}
+then the operation is equivalent to atomically performing the following:
+\begin{codeblock}
+  T result;
+  memcpy(&result, ptr, sizeof(T));
+  memcpy(ptr, &desired, sizeof(T));
+  return result;
+\end{codeblock}
+Otherwise, equivalent to:
 \begin{codeblock}
   T result;
   lock->lock();
@@ -211,7 +268,7 @@ bool compare_exchange_strong(T& expected, T desired,
 
 \begin{itemdescr}
 \pnum
-\requires The \tcode{failure} argument shall not be
+\removed{\requires}\added{\expects} The \tcode{failure} argument shall not be
 \tcode{memory_order_release} nor \tcode{memory_order_acq_rel}.
 
 \pnum
@@ -224,21 +281,46 @@ except that a value of \tcode{memory_order_acq_rel} shall be replaced by
 the value \tcode{memory_order_acquire} and
 a value of \tcode{memory_order_release} shall be replaced by
 the value \tcode{memory_order_relaxed}.
-
 \end{addedblock}
-\added{If \tcode{is_lock_free()} is \tcode{true}}
-\removed{R}\added{r}etrieves the value in \tcode{expected}.
+
+\begin{addedblock}
+If \tcode{lock} is equivalent to \tcode{nullptr} then
+the operation is equivalent to atomically performing the following:
+\begin{codeblock}
+  T old;
+  memcpy(&old, ptr, sizeof(T));
+  bool result = 0 == memcmp(&expected, &old, sizeof(T));
+  if (result) memcpy(ptr, &desired, sizeof(T));
+  else memcpy(&expected, &old, sizeof(T));
+  return result;
+\end{codeblock}
+Otherwise, equivalent to:
+\begin{codeblock}
+  T old;
+  lock->lock()
+  memcpy(&old, ptr, sizeof(T));
+  bool result = 0 == memcmp(&expected, &old, sizeof(T));
+  if (result) memcpy(ptr, &desired, sizeof(T));
+  else memcpy(&expected, &old, sizeof(T));
+  lock->unlock();
+  return result;
+\end{codeblock}
+
+\pnum
+Let \tcode{R} be the return value of the operation.
+If and only if \tcode{R} is \tcode{true},
+memory is affected according to the value of \tcode{success}, and
+if \tcode{R} is \tcode{false},
+memory is affected according to the value of \tcode{failure}.
+\end{addedblock}
+
+\begin{removedblock}
+Retrieves the value in \tcode{expected}.
 It then atomically compares the value representation of
 the value referenced by \tcode{*ptr} for equality
 with that previously retrieved from \tcode{expected},
 and if \tcode{true}, replaces the value referenced by \tcode{*ptr}
 with that in \tcode{desired}.
-If and only if the comparison is \tcode{true},
-memory is affected according to the value of \tcode{success}, and
-if the comparison is \tcode{false},
-memory is affected according to the value of \tcode{failure}.
-
-\begin{removedblock}
 When only one \tcode{memory_order} argument is supplied,
 the value of \tcode{success} is \tcode{order}, and
 the value of \tcode{failure} is \tcode{order}
@@ -246,37 +328,21 @@ except that a value of \tcode{memory_order_acq_rel} shall be replaced by
 the value \tcode{memory_order_acquire} and
 a value of \tcode{memory_order_release} shall be replaced by
 the value \tcode{memory_order_relaxed}.
-\end{removedblock}
 If and only if the comparison is \tcode{false} then,
 after the atomic operation,
 the value in \tcode{expected} is replaced by
 the value read from the value referenced by \tcode{*ptr}
 during the atomic comparison.
-If the operation returns \tcode{true},
+\end{removedblock}
+If \removed{the operation returns}\added{\tcode{R} is} \tcode{true},
 these operations are atomic read-modify-write operations\iref{intro.races}
 on the value referenced by \tcode{*ptr}.
 Otherwise, these operations are atomic load operations on that memory.
 
-\begin{addedblock}
-\pnum
-\added{If \tcode{is_lock_free()} is \tcode{false}} equivalent to:
-\begin{codeblock}
-  T old;
-  bool result;
-  lock->lock();
-  memcpy(&old, ptr, sizeof(T));
-  result = 0 == memcmp(ptr, &old, sizeof(T);
-  if (result) 
-    memcpy(ptr, &desired, sizeof(T));
-  else 
-    memcpy(&expected, &old, sizeof(T));
-  lock->unlock();
-  return result;
-\end{codeblock}
-\end{addedblock}
-
+\begin{removedblock}
 \pnum
 \returns The result of the comparison.
+\end{removedblock}
 
 \pnum
 \remarks A weak compare-and-exchange operation may fail spuriously.
@@ -312,7 +378,11 @@ namespace std {
     using value_type = @\placeholder{integral}@;
     using difference_type = value_type;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{whether a given \tcode{atomic_ref} type's operations never require a user provided lock};}@
     static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
@@ -372,7 +442,11 @@ namespace std {
     using value_type = @\placeholder{floating-point}@;
     using difference_type = value_type;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{whether a given \tcode{atomic_ref} type's operations never require a user provided lock};}@
     static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
@@ -419,7 +493,11 @@ namespace std {
     using value_type = T*;
     using difference_type = ptrdiff_t;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{whether a given \tcode{atomic_ref} type's operations never require a user provided lock};}@
     static constexpr size_t required_alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+
+    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
