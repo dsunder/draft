@@ -158,17 +158,26 @@ provide a valid pointer to a \tcode{Lock} object when constructing an
 \end{itemdescr}
 \end{addedblock}
 
-\begin{itemdecl}
 \begin{removedblock}
+\begin{itemdecl}
 explicit atomic_ref(T&) noexcept;
+\end{itemdecl}
 \end{removedblock}
-\begin{addblock}
+
+\begin{addedblock}
+\begin{itemdecl}
 explicit atomic_ref(T&) noexcept(!is_same_v<Lock,atomic_ref_assume_no_user_locks>
   || @\impdefx{can the implementation support \tcode{atomic_ref} without a user provided lock}@);
-\end{addblock}
 \end{itemdecl}
+\end{addedblock}
 
 \begin{itemdescr}
+\begin{addedblock}
+\pnum
+\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
+to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+\end{addedblock}
 \pnum
 \removed{\requires The referenced object shall be aligned to \tcode{required_lock_free_alignment}}.
 \begin{addedblock}
@@ -201,6 +210,11 @@ atomic_ref(T& obj, atomic_ref_assume_lock_free_t);
 
 \begin{itemdescr}
 \pnum
+\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
+to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+
+\pnum
 \expects The object referenced \tcode{obj} is be aligned to \tcode{required_lock_free_alignment} and
 this constructor is used for all \tcode{atomic_ref} objects which reference the 
 object referenced by \tcode{obj} concurrently. 
@@ -225,6 +239,11 @@ atomic_ref(T& obj, Lock& lk);
 \end{itemdecl}
 
 \begin{itemdescr}
+\pnum
+\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
+to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+
 \pnum
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements 
 or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
@@ -258,6 +277,11 @@ atomic_ref(T& obj, Lock& lk, atomic_ref_perfer_user_lock_t);
 
 \begin{itemdescr}
 \pnum
+\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
+to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+
+\pnum
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements,
 is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or \tcode{requires_user_lock(obj)} 
 is \tcode{false}.
@@ -289,6 +313,11 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks);
 \end{itemdecl}
 
 \begin{itemdescr}
+\pnum
+\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
+to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+
 \pnum
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
 is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or \tcode{requires_user_lock(obj)} 
@@ -323,6 +352,11 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks, atomic_ref_perfer_user_l
 \end{itemdecl}
 
 \begin{itemdescr}
+\pnum
+\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
+to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+
 \pnum
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements 
 or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
