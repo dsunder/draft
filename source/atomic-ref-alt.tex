@@ -17,11 +17,12 @@ while perserving current behavior as much as possible.
 \begin{codeblock}
 namespace std {
   struct atomic_ref_assume_lock_free_t    {};
-  struct atomic_ref_assume_no_user_lock_t {};
   struct atomic_ref_perfer_user_lock_t    {};
-
+  
   inline constexpr atomic_ref_assume_lock_free_t  atomic_ref_assume_lock_free {};
   inline constexpr atomic_ref_perfer_user_lock_t  atomic_ref_perfer_user_lock {};
+
+  struct atomic_ref_assume_no_user_locks {};
 }
 \end{codeblock}
 \end{addedblock}
