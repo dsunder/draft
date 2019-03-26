@@ -16,8 +16,9 @@ while perserving current behavior as much as possible.
 \begin{addedblock}
 \begin{codeblock}
 namespace std {
-  struct atomic_ref_assume_lock_free_t {} // \expos;
-  struct atomic_ref_perfer_user_lock_t {} // \expos;
+  struct atomic_ref_assume_lock_free_t    {};
+  struct atomic_ref_assume_no_user_lock_t {};
+  struct atomic_ref_perfer_user_lock_t    {};
 
   inline constexpr atomic_ref_assume_lock_free_t  atomic_ref_assume_lock_free {};
   inline constexpr atomic_ref_perfer_user_lock_t  atomic_ref_perfer_user_lock {};
@@ -36,6 +37,7 @@ namespace std {
   public:
     using value_type = T;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
     @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
@@ -112,6 +114,16 @@ could be supported only if aligned to \tcode{2*alignof(double)}.
 
 \begin{addedblock}
 \begin{itemdecl}
+static constexpr bool never_requires_user_lock;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+Is \tcode{true} if an implementation never requires the user to provide a 
+lock for objects of type \tcode{T} and \tcode{false} otherwise.
+\end{itemdescr}
+
+\begin{itemdecl}
 static is_lock_free(T& obj); noexcept
 \end{itemdecl}
 
@@ -126,14 +138,11 @@ static requires_user_lock(T& obj); noexcept
 \end{itemdecl}
 
 \begin{itemdescr}
-\returns Returns \tcode{false} if the \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
+\returns Returns \tcode{false} if the \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}
+or \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
 Otherwise, returns \tcode{true} if \tcode{atomic_ref} requires the user to
 provide a valid pointer to a \tcode{Lock} object when constructing an 
 \tcode{atomic_ref} from \tcode{obj}. 
-\begin{note}
-Implementations could provide ways for \tcode{atomic_ref} to use 
-implementation defined locking mechanisms when \tcode{is_lock_free(obj)} is \tcode{false}.
-\end{note}
 \end{itemdescr}
 \end{addedblock}
 
@@ -202,7 +211,8 @@ atomic_ref(T& obj, Lock& lk);
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements 
 or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
 For all \tcode{atomic_ref} objects that concurrently reference the object referenced
-by \tcode{obj} both of the following are true:
+by \tcode{obj} either \tcode{requires_user_lock(obj)} is \tcode{false} or
+the following conditions are true:
 
 \begin{itemize}
 \item \tcode{lk} references the same \tcode{Lock} object, and
@@ -230,10 +240,11 @@ atomic_ref(T& obj, Lock& lk, atomic_ref_perfer_user_lock_t);
 
 \begin{itemdescr}
 \pnum
-\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements
-or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
+\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements,
+is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or \tcode{requires_user_lock(obj)} 
+is \tcode{false}.
 For all \tcode{atomic_ref} objects that concurrently reference the object referenced
-by \tcode{obj} both of the following are true:
+by \tcode{obj} both of the following conditions are true:
 
 \begin{itemize}
 \item \tcode{lk} references the same \tcode{Lock} object, and
@@ -261,10 +272,12 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks);
 
 \begin{itemdescr}
 \pnum
-\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements 
-or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
+\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
+is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or \tcode{requires_user_lock(obj)} 
+is \tcode{false}.
 For all \tcode{atomic_ref} objects that concurrently reference the object referenced
-by \tcode{obj} all of the following are true:
+by \tcode{obj} either \tcode{requires_user_lock(obj)} is \tcode{false} or
+the following conditions are true:
 
 \begin{itemize}
 \item \tcode{lks} is a non-empty range of \tcode{Lock} objects,
@@ -296,7 +309,7 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks, atomic_ref_perfer_user_l
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements 
 or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
 For all \tcode{atomic_ref} objects that concurrently reference the object referenced
-by \tcode{obj} all of the following are true:
+by \tcode{obj} all of the following conditions are true:
 
 \begin{itemize}
 \item \tcode{lks} is a non-empty range of \tcode{Lock} objects,
@@ -564,6 +577,7 @@ namespace std {
     using value_type = @\placeholder{integral}@;
     using difference_type = value_type;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
     @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
@@ -635,6 +649,7 @@ namespace std {
     using value_type = @\placeholder{floating-point}@;
     using difference_type = value_type;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
     @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
@@ -693,6 +708,7 @@ namespace std {
     using value_type = T*;
     using difference_type = ptrdiff_t;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
     @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
