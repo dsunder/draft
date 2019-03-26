@@ -45,8 +45,19 @@ namespace std {
     @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
-
-    explicit atomic_ref(T&) @\added{noexcept(\impdefx{can an implementation support \tcode{atomic_ref} without a user provided lock})}@;
+\end{codeblock}
+\begin{removedblock}
+\begin{codeblock}
+    explicit atomic_ref(T&) noexcept;
+\end{codeblock}
+\end{removedblock}
+\begin{addedblock}
+\begin{codeblock}
+    explicit atomic_ref(T&) noexcept(!is_same_v<Lock,atomic_ref_assume_no_user_locks> 
+      || @\impdefx{can an implementation support \tcode{atomic_ref} without a user provided lock}@);
+\end{codeblock}
+\end{addedblock}
+\begin{codeblock}
     @\added{\tcode{atomic_ref(T\&, atomic_ref_assume_lock_free_t) noexcept;}}@
    
     @\added{\tcode{atomic_ref(T\&, Lock\&) noexcept;}}@
@@ -148,7 +159,13 @@ provide a valid pointer to a \tcode{Lock} object when constructing an
 \end{addedblock}
 
 \begin{itemdecl}
-explicit atomic_ref(T&) @\added{noexcept(\impdefx{can the implementation support \tcode{atomic_ref} without a user provided lock})}@;
+\begin{removedblock}
+explicit atomic_ref(T&) noexcept;
+\end{removedblock}
+\begin{addblock}
+explicit atomic_ref(T&) noexcept(!is_same_v<Lock,atomic_ref_assume_no_user_locks>
+  || @\impdefx{can the implementation support \tcode{atomic_ref} without a user provided lock}@);
+\end{addblock}
 \end{itemdecl}
 
 \begin{itemdescr}
