@@ -18,10 +18,10 @@ while perserving current behavior as much as possible.
 namespace std {
   struct atomic_ref_assume_lock_free_t    {};
   struct atomic_ref_assume_no_user_lock_t {};
-  struct atomic_ref_perfer_user_lock_t    {};
+  struct atomic_ref_prefer_user_lock_t    {};
   
   inline constexpr atomic_ref_assume_lock_free_t  atomic_ref_assume_lock_free {};
-  inline constexpr atomic_ref_perfer_user_lock_t  atomic_ref_perfer_user_lock {};
+  inline constexpr atomic_ref_prefer_user_lock_t  atomic_ref_prefer_user_lock {};
 }
 \end{codeblock}
 \end{addedblock}
@@ -30,11 +30,12 @@ namespace std {
 \begin{codeblock}
 namespace std {
 
-  template<class T@\added{, class Lock = mutex}@> struct atomic_ref {
+  template<class T@\added{, class LockT=\unspec}@> struct atomic_ref {
   private:
     T* ptr;      // \expos
     @\added{Lock* ulock; // \expos}@
   public:
+    @\added{using Lock = LockT;}@
     using value_type = T;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
     @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
@@ -45,14 +46,16 @@ namespace std {
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
-    explicit atomic_ref(T&) noexcept@\added{(\seebelow)}@;
+    explicit atomic_ref(T&) noexcept;
     @\added{\tcode{atomic_ref(T\&, atomic_ref_assume_lock_free_t) noexcept;}}@
    
     @\added{\tcode{atomic_ref(T\&, Lock\&) noexcept;}}@
-    @\added{\tcode{atomic_ref(T\&, Lock\&, atomic_ref_perfer_user_lock_t) noexcept;}}@
+    @\added{\tcode{atomic_ref(T\&, Lock\&, atomic_ref_prefer_user_lock_t) noexcept;}}@
     
-    @\added{\tcode{atomic_ref(T\&, ranges::RandomAccessRange<Lock>) noexcept;}}@
-    @\added{\tcode{atomic_ref(T\&, ranges::RandomAccessRange<Lock>, atomic_ref_perfer_user_lock_t) noexcept;}}@
+    @\added{\tcode{template<class Select> atomic_ref(T\&, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{Select = \unspec ) noexcept;}}@
+    @\added{\tcode{template<class Select> atomic_ref(T\&, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
 
     atomic_ref(const atomic_ref&) noexcept;
 
@@ -78,6 +81,14 @@ namespace std {
 
 \textbf{\textit{Make the following changes in [atomics.ref.operations].}} \\
 
+\begin{addedblock}
+\tcode{atomic_ref} instances referencing the same value of ptr and ulock are 
+called \textit{equivalent}. Concurrent access to the same value through 
+equivalent \tcode{atomic_ref} instances does not create a data race. 
+\begin{note} Concurrent access to the value directly, or through a non-equivalent
+\tcode{atomic_ref} instance, may introduce a data race.
+\end{note}
+\end{addedblock}
 
 \begin{itemdecl}
 static constexpr bool is_always_lock_free;
@@ -143,8 +154,8 @@ static requires_user_lock(T& obj) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\returns Returns \tcode{false} if the type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}
-or \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
+\returns Returns \tcode{false} if the type \tcode{Lock} is equivalent to either
+\tcode{atomic_ref_assume_lock_free_t} or \tcode{atomic_ref_assume_no_user_lock_t}.
 Otherwise, returns \tcode{true} if \tcode{atomic_ref} requires the user to
 provide a valid reference to a \tcode{Lock} object 
 or a non-empty \tcode{ranges::RandomAccessRange<Lock>} 
@@ -154,7 +165,7 @@ when constructing an \tcode{atomic_ref} from \tcode{obj}.
 
 
 \begin{itemdecl}
-explicit atomic_ref(T&) noexcept@\added{(\seebelow)}@;
+explicit atomic_ref(T& obj) noexcept@\added{(\seebelow)}@;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -185,13 +196,11 @@ respectively.
 \end{addedblock}
 
 \pnum
-\throws Nothing 
+\throws Nothing.
+ 
+\pnum
 \begin{addedblock}
-if type \tcode{never_requires_user_lock} is \tcode{true}, or if \tcode{Lock} is
-either equivalent to \\ \tcode{atomic_ref_assume_lock_free_t} or 
-\tcode{atomic_ref_assume_no_user_lock_t}.
-Otherwise, throws \\ \tcode{\textcolor{blue}{????}_error} if 
-\tcode{requires_user_lock(obj)} is \tcode{true};
+\remarks Calls \tcode{terminate()} if \tcode{requires_user_lock(obj)} is \tcode{true}.
 \end{addedblock}
 \end{itemdescr}
 
@@ -212,9 +221,7 @@ respectively.
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
-\\ Furthermore, the object referenced \tcode{obj} is be aligned to \tcode{required_lock_free_alignment} and
-this constructor is used for all \tcode{atomic_ref} objects which concurrently reference the 
-object referenced by \tcode{obj}.
+\\ Furthermore, the object referenced \tcode{obj} is be aligned to \tcode{required_lock_free_alignment}.
 
 \pnum
 \effects Equivalent to:
@@ -225,8 +232,11 @@ object referenced by \tcode{obj}.
 
 \pnum
 \throws Nothing.
-\end{itemdescr}
 
+\pnum
+\remarks Calls \tcode{terminate} if \tcode{is_lock_free(obj)} is \tcode{false}.
+
+\end{itemdescr}
 \end{addedblock}
 
 
@@ -246,14 +256,9 @@ respectively.
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
-\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
-by \tcode{obj} either \tcode{requires_user_lock(obj)} is \tcode{false} or
-the following conditions are true:
-
-\begin{itemize}
-\item \tcode{lk} references the same \tcode{Lock} object, and
-\item \tcode this constructor is used for all the \tcode{atomic_ref} objects mentioned above.
-\end{itemize}
+\\ Furthermore, either \tcode{requires_user_lock(obj)} is false or 
+all \tcode{atomic_ref} objects which concurrently reference the object referenced
+by \tcode{obj} are equivalent.
 
 \pnum
 \effects Equivalent to:
@@ -264,14 +269,14 @@ the following conditions are true:
 
 \pnum
 \throws Nothing.
-\end{itemdescr}
 
+\end{itemdescr}
 \end{addedblock}
 
 
 \begin{addedblock}
 \begin{itemdecl}
-atomic_ref(T& obj, Lock& lk, atomic_ref_perfer_user_lock_t);
+atomic_ref(T& obj, Lock& lk, atomic_ref_prefer_user_lock_t);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -285,13 +290,8 @@ respectively.
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
-\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
-by \tcode{obj} either the following conditions are true:
-
-\begin{itemize}
-\item \tcode{lk} references the same \tcode{Lock} object, and
-\item \tcode this constructor is used for all the \tcode{atomic_ref} objects mentioned above.
-\end{itemize}
+\\ Furthermore, all \tcode{atomic_ref} objects which concurrently reference the 
+object referenced by \tcode{obj} are equivalent.
 
 \pnum
 \effects Equivalent to:
@@ -309,7 +309,9 @@ by \tcode{obj} either the following conditions are true:
 
 \begin{addedblock}
 \begin{itemdecl}
-atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks);
+template <class Select>
+atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks, 
+  Select sel = @\unspec@ );
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -317,40 +319,44 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks);
 \mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
 or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
 lock-free or not require a user provided lock for some objects of type \tcode{T} 
-respectively.
+respectively. Furthermore, \\
+\tcode{INVOKE(sel(const T\&, ranges::RandomAccessRange<Lock>))} returns
+a reference to an object of type \tcode{Lock}.
 
 \pnum
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
-\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
-by \tcode{obj} either \tcode{requires_user_lock(obj)} is \tcode{false} or
-the following conditions are true:
-
-\begin{itemize}
-\item \tcode{lks} is a non-empty range of \tcode{Lock} objects,
-\item \tcode{lks} represents equivalent ranges of \tcode{Lock} objects, and
-\item \tcode this constructor is used for all the \tcode{atomic_ref} objects mentioned above.
-\end{itemize}
+Also, the range \tcode{lks} is non-empty and \tcode{INVOKE(sel(obj, lks))} returns a
+reference to a \tcode{Lock} object in the range of \tcode{lks}. 
+Furthermore, either \tcode{require} is \tcode{false} or
+for all \tcode{atomic_ref} objects which concurrently reference the object referenced
+by \tcode{obj} are equivalent.
 
 \pnum
 \effects Equivalent to:
 \begin{codeblock}
   ptr = &obj;
   ulock = requires_user_lock(obj) ? 
-    &ranges::begin(lks)[std::hash(&obj)%ranges::size(lks)] : nullptr;
+    std::addressof(INVOKE(sel(obj, lks))) : nullptr;
 \end{codeblock}
 
 \pnum
 \throws Nothing.
-\end{itemdescr}
 
+\pnum
+\remarks Calls \tcode{terminate} if the range \tcode{lks} is empty.
+\tcode{requires_user_lock(obj)} is \tcode{true}.
+
+\end{itemdescr}
 \end{addedblock}
 
 
 \begin{addedblock}
 \begin{itemdecl}
-atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks, atomic_ref_perfer_user_lock_t);
+template <class Select>
+atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks,
+  atomic_ref_prefer_user_lock_t, Sel sel = @\unspec@ );
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -358,33 +364,35 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks, atomic_ref_perfer_user_l
 \mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
 or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
 lock-free or not require a user provided lock for some objects of type \tcode{T} 
-respectively.
+respectively. Furthermore, \\
+\tcode{INVOKE(sel(const T\&, ranges::RandomAccessRange<Lock>))} returns
+a reference to an object of type \tcode{Lock}.
 
 \pnum
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
 \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
-\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
-by \tcode{obj} all of the following conditions are true:
-
-\begin{itemize}
-\item \tcode{lks} is a non-empty range of \tcode{Lock} objects,
-\item \tcode{lks} represents equivalent ranges of \tcode{Lock} objects, and
-\item \tcode this constructor is used for all the \tcode{atomic_ref} objects mentioned above.
-\end{itemize}
+Also, the range \tcode{lks} is non-empty and \tcode{INVOKE(sel(obj, lks))} returns a
+reference to a \tcode{Lock} object in the range of \tcode{lks}. 
+Furthermore, all \tcode{atomic_ref} objects which concurrently reference the object referenced
+by \tcode{obj} are equivalent.
 
 \pnum
 \effects Equivalent to:
 \begin{codeblock}
   ptr = &obj;
   ulock = is_lock_free(obj) ? 
-    nullptr : &ranges::begin(lks)[std::hash(&obj)%ranges::size(lks)];
+    nullptr: std::addressof(INVOKE(sel(obj, lks)));
 \end{codeblock}
 
 \pnum
 \throws Nothing.
-\end{itemdescr}
 
+\pnum
+\remarks Calls \tcode{terminate} if the range \tcode{lks} is empty and 
+\tcode{is_lock_free(obj)} is \tcode{false}.
+
+\end{itemdescr}
 \end{addedblock}
 
 
@@ -451,17 +459,17 @@ T load(memory_order order = memory_order_seq_cst) const noexcept;
 \effects If \tcode{ulock} is equivalent to \tcode{nullptr} then the
 operation is equivalent to atomically performing the following:
 \begin{codeblock}
-  T result;
-  memcpy(&result, ptr, sizeof(T));
-  return result;
+  alignas(T) char result[sizeof(T)];
+  memcpy(result, ptr, sizeof(T));
+  return *reinterpret_cast<T*>(result);
 \end{codeblock}
 Otherwise, equivalent to:
 \begin{codeblock}
-  T result;
+  alignas(T) char result[sizeof(T)];
   ulock->lock();
-  memcpy(&result, ptr, sizeof(T));
+  memcpy(result, ptr, sizeof(T));
   ulock->unlock();
-  return result;
+  return *reinterpret_cast<T*>(result);
 \end{codeblock}
 \end{addedblock}
 Memory is affected according to the value of \tcode{order}.
@@ -485,19 +493,19 @@ with \tcode{desired}.}
 \effects \added{If \tcode{ulock} is equivalent to \tcode{nullptr}}
 then the operation is equivalent to atomically performing the following:
 \begin{codeblock}
-  T result;
-  memcpy(&result, ptr, sizeof(T));
+  alignas(T) char result[sizeof(T)];
+  memcpy(result, ptr, sizeof(T));
   memcpy(ptr, &desired, sizeof(T));
-  return result;
+  return *reinterpret_cast<T*>(result);
 \end{codeblock}
 Otherwise, equivalent to:
 \begin{codeblock}
-  T result;
+  alignas(T) char result[sizeof(T)];
   ulock->lock();
-  memcpy(&result, ptr, sizeof(T));
+  memcpy(result, ptr, sizeof(T));
   memcpy(ptr, &desired, sizeof(T));
   ulock->unlock();
-  return result;
+  return *reinterpret_cast<T*>(result);
 \end{codeblock}
 \end{addedblock}
 Memory is affected according to the value of \tcode{order}.
@@ -546,25 +554,25 @@ the value \tcode{memory_order_relaxed}.
 If \tcode{ulock} is equivalent to \tcode{nullptr} then
 the operation is equivalent to atomically performing the following:
 \begin{codeblock}
-  T old;
-  memcpy(&old, ptr, sizeof(T));
-  bool result = 0 == memcmp(&expected, &old, sizeof(T));
+  alignas(T) char old[sizeof(T)];
+  memcpy(old, ptr, sizeof(T));
+  bool result = 0 == memcmp(&expected, old, sizeof(T));
   if (result) memcpy(ptr, &desired, sizeof(T));
-  else memcpy(&expected, &old, sizeof(T));
+  else memcpy(&expected, old, sizeof(T));
   return result;
 \end{codeblock}
 Otherwise, equivalent to:
 \begin{codeblock}
-  T old;
+  alignas(T) char old[sizeof(T)];
   ulock->lock()
-  memcpy(&old, ptr, sizeof(T));
-  bool result = 0 == memcmp(&expected, &old, sizeof(T));
+  memcpy(old, ptr, sizeof(T));
+  bool result = 0 == memcmp(&expected, old, sizeof(T));
   if (result) {
     memcpy(ptr, &desired, sizeof(T));
     ulock->unlock();
   } else {
     ulock->unlock();
-    memcpy(&expected, &old, sizeof(T));
+    memcpy(&expected, old, sizeof(T));
   }
   return result;
 \end{codeblock}
@@ -649,14 +657,16 @@ namespace std {
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
-    explicit atomic_ref(T&) noexcept@\added{(\textit{see above})}@;
+    explicit atomic_ref(T&) noexcept;
     @\added{atomic_ref(\placeholder{integral}\&, atomic_ref_assume_lock_free_t) noexcept;}@
     
     @\added{atomic_ref(\placeholder{integral}\&, Lock\&) noexcept;}@
-    @\added{atomic_ref(\placeholder{integral}\&, Lock\&, atomic_ref_perfer_user_lock_t) noexcept;}@
+    @\added{atomic_ref(\placeholder{integral}\&, Lock\&, atomic_ref_prefer_user_lock_t) noexcept;}@
     
-    @\added{atomic_ref(\placeholder{integral}\&, ranges::RandomAccessRange<Lock>) noexcept;}@
-    @\added{atomic_ref(\placeholder{integral}\&, ranges::RandomAccessRange<Lock>, atomic_ref_perfer_user_lock_t) noexcept;}@
+    @\added{\tcode{template<class Select> atomic_ref(\placeholder{integral}\&, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{Select = \unspec ) noexcept;}}@
+    @\added{\tcode{template<class Select> atomic_ref(\placeholder{integral}\&, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
 
     atomic_ref(const atomic_ref&) noexcept;
 
@@ -721,14 +731,16 @@ namespace std {
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
-    explicit atomic_ref(T&) noexcept@\added{(\textit{see above})}@;
+    explicit atomic_ref(T&) noexcept;
     @\added{atomic_ref(\placeholder{floating-point}\&, atomic_ref_assume_lock_free_t) noexcept;}@
     
     @\added{atomic_ref(\placeholder{floating-point}\&, Lock\&) noexcept;}@
-    @\added{atomic_ref(\placeholder{floating-point}\&, Lock\&, atomic_ref_perfer_user_lock_t) noexcept;}@
+    @\added{atomic_ref(\placeholder{floating-point}\&, Lock\&, atomic_ref_prefer_user_lock_t) noexcept;}@
     
-    @\added{atomic_ref(\placeholder{floating-point}\&, ranges::RandomAccessRange<Lock>) noexcept;}@
-    @\added{atomic_ref(\placeholder{floating-point}\&, ranges::RandomAccessRange<Lock>, atomic_ref_perfer_user_lock_t) noexcept;}@
+    @\added{\tcode{template<class Select> atomic_ref(\placeholder{floating-point}\&, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{Select = \unspec ) noexcept;}}@
+    @\added{\tcode{template<class Select> atomic_ref(\placeholder{floating-point}\&, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
 
     atomic_ref(const atomic_ref&) noexcept;
 
@@ -780,14 +792,16 @@ namespace std {
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
-    explicit atomic_ref(T&) noexcept@\added{(\textit{see above})}@;
+    explicit atomic_ref(T&) noexcept;
     @\added{atomic_ref(T*, atomic_ref_assume_lock_free_t) noexcept;}@
    
     @\added{atomic_ref(T*, Lock\&) noexcept;}@
-    @\added{atomic_ref(T*, Lock\&, atomic_ref_perfer_user_lock_t) noexcept;}@
+    @\added{atomic_ref(T*, Lock\&, atomic_ref_prefer_user_lock_t) noexcept;}@
     
-    @\added{atomic_ref(T*, ranges::RandomAccessRange<Lock>) noexcept;}@
-    @\added{atomic_ref(T*, ranges::RandomAccessRange<Lock>, atomic_ref_perfer_user_lock_t) noexcept;}@
+    @\added{\tcode{template<class Select> atomic_ref(T*, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{Select = \unspec ) noexcept;}}@
+    @\added{\tcode{template<class Select> atomic_ref(T*, ranges::RandomAccessRange<Lock>, }}@
+    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
 
     atomic_ref(const atomic_ref&) noexcept;
 
