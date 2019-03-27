@@ -17,12 +17,11 @@ while perserving current behavior as much as possible.
 \begin{codeblock}
 namespace std {
   struct atomic_ref_assume_lock_free_t    {};
+  struct atomic_ref_assume_no_user_lock_t {};
   struct atomic_ref_perfer_user_lock_t    {};
   
   inline constexpr atomic_ref_assume_lock_free_t  atomic_ref_assume_lock_free {};
   inline constexpr atomic_ref_perfer_user_lock_t  atomic_ref_perfer_user_lock {};
-
-  struct atomic_ref_assume_no_user_locks {};
 }
 \end{codeblock}
 \end{addedblock}
@@ -45,19 +44,8 @@ namespace std {
     @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
-\end{codeblock}
-\begin{removedblock}
-\begin{codeblock}
-    explicit atomic_ref(T&) noexcept;
-\end{codeblock}
-\end{removedblock}
-\begin{addedblock}
-\begin{codeblock}
-    explicit atomic_ref(T&) noexcept(!is_same_v<Lock,atomic_ref_assume_no_user_locks> 
-      || @\impdefx{can an implementation support \tcode{atomic_ref} without a user provided lock}@);
-\end{codeblock}
-\end{addedblock}
-\begin{codeblock}
+
+    explicit atomic_ref(T&) noexcept@\added{(\seebelow)}@;
     @\added{\tcode{atomic_ref(T\&, atomic_ref_assume_lock_free_t) noexcept;}}@
    
     @\added{\tcode{atomic_ref(T\&, Lock\&) noexcept;}}@
@@ -90,6 +78,7 @@ namespace std {
 
 \textbf{\textit{Make the following changes in [atomics.ref.operations].}} \\
 
+
 \begin{itemdecl}
 static constexpr bool is_always_lock_free;
 \end{itemdecl}
@@ -101,6 +90,7 @@ if the \tcode{atomic_ref} type's operations are always lock-free
 \added{on objects aligned to \tcode{required_lock_free_alignment}},
 and \tcode{false} otherwise.
 \end{itemdescr}
+
 
 \begin{itemdecl}
 static constexpr size_t required_@\added{lock_free_}@alignment;
@@ -117,12 +107,13 @@ Hardware could require an object
 referenced by an \tcode{atomic_ref}
 to have stricter alignment\iref{basic.align}
 than other objects of type \tcode{T}.
-Further, whether operations on an \tcode{atomic_ref}
+Further\added{more}, whether operations on an \tcode{atomic_ref}
 are lock-free could depend on the alignment of the referenced object.
 For example, lock-free operations on \tcode{std::complex<double>}
 could be supported only if aligned to \tcode{2*alignof(double)}.
 \end{note}
 \end{itemdescr}
+
 
 \begin{addedblock}
 \begin{itemdecl}
@@ -135,8 +126,9 @@ Is \tcode{true} if an implementation never requires the user to provide a
 lock for objects of type \tcode{T} and \tcode{false} otherwise.
 \end{itemdescr}
 
+
 \begin{itemdecl}
-static is_lock_free(T& obj); noexcept
+static is_lock_free(T& obj) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -145,45 +137,42 @@ static is_lock_free(T& obj); noexcept
 \tcode{atomic_ref_assume_lock_free_t}.
 \end{itemdescr}
 
+
 \begin{itemdecl}
-static requires_user_lock(T& obj); noexcept
+static requires_user_lock(T& obj) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\returns Returns \tcode{false} if the \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}
+\returns Returns \tcode{false} if the type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}
 or \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
 Otherwise, returns \tcode{true} if \tcode{atomic_ref} requires the user to
-provide a valid pointer to a \tcode{Lock} object when constructing an 
-\tcode{atomic_ref} from \tcode{obj}. 
+provide a valid reference to a \tcode{Lock} object 
+or a non-empty \tcode{ranges::RandomAccessRange<Lock>} 
+when constructing an \tcode{atomic_ref} from \tcode{obj}. 
 \end{itemdescr}
 \end{addedblock}
 
-\begin{removedblock}
-\begin{itemdecl}
-explicit atomic_ref(T&) noexcept;
-\end{itemdecl}
-\end{removedblock}
 
-\begin{addedblock}
 \begin{itemdecl}
-explicit atomic_ref(T&) noexcept(!is_same_v<Lock,atomic_ref_assume_no_user_locks>
-  || @\impdefx{can the implementation support \tcode{atomic_ref} without a user provided lock}@);
+explicit atomic_ref(T&) noexcept@\added{(\seebelow)}@;
 \end{itemdecl}
-\end{addedblock}
 
 \begin{itemdescr}
 \begin{addedblock}
 \pnum
-\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
-to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+\mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
+lock-free or not require a user provided lock for some objects of type \tcode{T} 
+respectively.
 \end{addedblock}
+
 \pnum
 \removed{\requires The referenced object shall be aligned to \tcode{required_lock_free_alignment}}.
 \begin{addedblock}
-\expects \\
-\tcode{requires_user_lock(obj)} is \tcode{false}, and this constructor is used for all \tcode{atomic_ref} objects which 
-reference the object referenced by \tcode{obj} concurrently.
+\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
+\tcode{Lock} is equivalent to \\ \tcode{atomic_ref_assume_lock_free_t}, or
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
+\\ Furthermore, \tcode{requires_user_lock(obj)} is \tcode{false}.
 \end{addedblock}
 
 \pnum
@@ -196,12 +185,16 @@ reference the object referenced by \tcode{obj} concurrently.
 \end{addedblock}
 
 \pnum
-\throws \removed{Nothing}
+\throws Nothing 
 \begin{addedblock}
-\impdefx{}.  If \tcode{requires_user_lock{obj}} could be \tcode{true}, an implementation
-throws \tcode{???_error} if \tcode{requires_user_lock} is \tcode{true};
+if type \tcode{never_requires_user_lock} is \tcode{true}, or if \tcode{Lock} is
+either equivalent to \\ \tcode{atomic_ref_assume_lock_free_t} or 
+\tcode{atomic_ref_assume_no_user_lock_t}.
+Otherwise, throws \\ \tcode{\textcolor{blue}{????}_error} if 
+\tcode{requires_user_lock(obj)} is \tcode{true};
 \end{addedblock}
 \end{itemdescr}
+
 
 \begin{addedblock}
 \begin{itemdecl}
@@ -210,14 +203,18 @@ atomic_ref(T& obj, atomic_ref_assume_lock_free_t);
 
 \begin{itemdescr}
 \pnum
-\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
-to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+\mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
+lock-free or not require a user provided lock for some objects of type \tcode{T} 
+respectively.
 
 \pnum
-\expects The object referenced \tcode{obj} is be aligned to \tcode{required_lock_free_alignment} and
-this constructor is used for all \tcode{atomic_ref} objects which reference the 
-object referenced by \tcode{obj} concurrently. 
+\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
+\\ Furthermore, the object referenced \tcode{obj} is be aligned to \tcode{required_lock_free_alignment} and
+this constructor is used for all \tcode{atomic_ref} objects which concurrently reference the 
+object referenced by \tcode{obj}.
 
 \pnum
 \effects Equivalent to:
@@ -240,14 +237,16 @@ atomic_ref(T& obj, Lock& lk);
 
 \begin{itemdescr}
 \pnum
-\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
-to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+\mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
+lock-free or not require a user provided lock for some objects of type \tcode{T} 
+respectively.
 
 \pnum
-\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements 
-or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
-For all \tcode{atomic_ref} objects that concurrently reference the object referenced
+\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
+\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
 by \tcode{obj} either \tcode{requires_user_lock(obj)} is \tcode{false} or
 the following conditions are true:
 
@@ -277,16 +276,17 @@ atomic_ref(T& obj, Lock& lk, atomic_ref_perfer_user_lock_t);
 
 \begin{itemdescr}
 \pnum
-\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
-to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+\mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
+lock-free or not require a user provided lock for some objects of type \tcode{T} 
+respectively.
 
 \pnum
-\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements,
-is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or \tcode{requires_user_lock(obj)} 
-is \tcode{false}.
-For all \tcode{atomic_ref} objects that concurrently reference the object referenced
-by \tcode{obj} both of the following conditions are true:
+\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
+\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
+by \tcode{obj} either the following conditions are true:
 
 \begin{itemize}
 \item \tcode{lk} references the same \tcode{Lock} object, and
@@ -314,15 +314,16 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks);
 
 \begin{itemdescr}
 \pnum
-\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
-to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+\mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
+lock-free or not require a user provided lock for some objects of type \tcode{T} 
+respectively.
 
 \pnum
 \expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
-is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or \tcode{requires_user_lock(obj)} 
-is \tcode{false}.
-For all \tcode{atomic_ref} objects that concurrently reference the object referenced
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
+\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
 by \tcode{obj} either \tcode{requires_user_lock(obj)} is \tcode{false} or
 the following conditions are true:
 
@@ -336,7 +337,8 @@ the following conditions are true:
 \effects Equivalent to:
 \begin{codeblock}
   ptr = &obj;
-  ulock = requires_user_lock(obj)) ? ranges::begin(lks)[std::hash(&obj)@ranges::size(lks)] : nullptr;
+  ulock = requires_user_lock(obj) ? 
+    &ranges::begin(lks)[std::hash(&obj)%ranges::size(lks)] : nullptr;
 \end{codeblock}
 
 \pnum
@@ -353,14 +355,16 @@ atomic_ref(T& obj, ranges::RandomAccessRange<Lock> lks, atomic_ref_perfer_user_l
 
 \begin{itemdescr}
 \pnum
-\mandates If type \tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-or \tcode{atomic_ref_assume_no_user_locks} it is possible for the implementation
-to either provide lockfree or not require a user provided lock on type \tcode{T} respectively.
+\mandates If type \tcode{Lock} is either equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+or \\ \tcode{atomic_ref_assume_no_user_lock_t} then the implementation can possibly be
+lock-free or not require a user provided lock for some objects of type \tcode{T} 
+respectively.
 
 \pnum
-\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements 
-or is equivalent to \tcode{atomic_ref_assume_lock_free_t}.
-For all \tcode{atomic_ref} objects that concurrently reference the object referenced
+\expects The type \tcode{Lock} either meets the \oldconcept{BasicLockable} requirements, 
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
+\tcode{Lock} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t}.
+\\ Furthermore, for all \tcode{atomic_ref} objects which concurrently reference the object referenced
 by \tcode{obj} all of the following conditions are true:
 
 \begin{itemize}
@@ -373,7 +377,8 @@ by \tcode{obj} all of the following conditions are true:
 \effects Equivalent to:
 \begin{codeblock}
   ptr = &obj;
-  ulock = is_lock_free(obj) ? nullptr : ranges::begin(lks)[std::hash(&obj)@ranges::size(lks)];
+  ulock = is_lock_free(obj) ? 
+    nullptr : &ranges::begin(lks)[std::hash(&obj)%ranges::size(lks)];
 \end{codeblock}
 
 \pnum
@@ -423,13 +428,14 @@ then the operation is equivalent to atomically performing the following:
 \end{codeblock}
 Otherwise, equivalent to:
 \begin{codeblock}
-  ulock->ulock();
+  ulock->lock();
   memcpy(ptr, &desired, sizeof(T));
   ulock->unlock();
 \end{codeblock}
 \end{addedblock}
 Memory is affected according to the value of \tcode{order}.
 \end{itemdescr}
+
 
 \begin{itemdecl}
 T load(memory_order order = memory_order_seq_cst) const noexcept;
@@ -452,7 +458,7 @@ operation is equivalent to atomically performing the following:
 Otherwise, equivalent to:
 \begin{codeblock}
   T result;
-  ulock->ulock();
+  ulock->lock();
   memcpy(&result, ptr, sizeof(T));
   ulock->unlock();
   return result;
@@ -465,6 +471,7 @@ Memory is affected according to the value of \tcode{order}.
 \returns Atomically returns the value referenced by \tcode{*ptr}.
 }
 \end{itemdescr}
+
 
 \begin{itemdecl}
 T exchange(T desired, memory_order order = memory_order_seq_cst) const noexcept;
@@ -486,7 +493,7 @@ then the operation is equivalent to atomically performing the following:
 Otherwise, equivalent to:
 \begin{codeblock}
   T result;
-  ulock->ulock();
+  ulock->lock();
   memcpy(&result, ptr, sizeof(T));
   memcpy(ptr, &desired, sizeof(T));
   ulock->unlock();
@@ -502,6 +509,7 @@ This operation is an atomic read-modify-write operation\iref{intro.multithread}.
 immediately before the effects.
 \end{removedblock}
 \end{itemdescr}
+
 
 \begin{itemdecl}
 bool compare_exchange_weak(T& expected, T desired,
@@ -548,12 +556,16 @@ the operation is equivalent to atomically performing the following:
 Otherwise, equivalent to:
 \begin{codeblock}
   T old;
-  ulock->ulock()
+  ulock->lock()
   memcpy(&old, ptr, sizeof(T));
   bool result = 0 == memcmp(&expected, &old, sizeof(T));
-  if (result) memcpy(ptr, &desired, sizeof(T));
-  else memcpy(&expected, &old, sizeof(T));
-  ulock->unlock();
+  if (result) {
+    memcpy(ptr, &desired, sizeof(T));
+    ulock->unlock();
+  } else {
+    ulock->unlock();
+    memcpy(&expected, &old, sizeof(T));
+  }
   return result;
 \end{codeblock}
 
@@ -637,7 +649,7 @@ namespace std {
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
-    explicit atomic_ref(@\placeholder{integral}@&) @\added{noexcept(\impdefx{can an implementation support \tcode{atomic_ref} without a user provided lock})}@;
+    explicit atomic_ref(T&) noexcept@\added{(\textit{see above})}@;
     @\added{atomic_ref(\placeholder{integral}\&, atomic_ref_assume_lock_free_t) noexcept;}@
     
     @\added{atomic_ref(\placeholder{integral}\&, Lock\&) noexcept;}@
@@ -709,7 +721,7 @@ namespace std {
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
-    explicit atomic_ref(@\placeholder{floating-point}@&) @\added{noexcept(\impdefx{can an implementation support \tcode{atomic_ref} without a user provided lock})}@;
+    explicit atomic_ref(T&) noexcept@\added{(\textit{see above})}@;
     @\added{atomic_ref(\placeholder{floating-point}\&, atomic_ref_assume_lock_free_t) noexcept;}@
     
     @\added{atomic_ref(\placeholder{floating-point}\&, Lock\&) noexcept;}@
@@ -768,7 +780,7 @@ namespace std {
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
-    explicit atomic_ref(T*) @\added{noexcept(\impdefx{can an implementation support \tcode{atomic_ref} without a user provided lock})}@;
+    explicit atomic_ref(T&) noexcept@\added{(\textit{see above})}@;
     @\added{atomic_ref(T*, atomic_ref_assume_lock_free_t) noexcept;}@
    
     @\added{atomic_ref(T*, Lock\&) noexcept;}@
