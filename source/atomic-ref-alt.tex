@@ -408,20 +408,11 @@ T load(memory_order order = memory_order_seq_cst) const noexcept;
 \pnum
 \removed{\requires}\added{\expects} The \tcode{order} argument shall not be
 \tcode{memory_order_release} nor \tcode{memory_order_acq_rel}.
-\begin{addedblock}
-\effects Equivalent to atomically performing the following:
-\begin{codeblock}
-  alignas(T) char result[sizeof(T)];
-  memcpy(result, ptr, sizeof(T));
-  return *reinterpret_cast<T*>(result);
-\end{codeblock}
-\end{addedblock}
-Memory is affected according to the value of \tcode{order}.
 
-\removed{
+\effects  Memory is affected according to the value of \tcode{order}.
+
 \pnum
 \returns Atomically returns the value referenced by \tcode{*ptr}.
-}
 \end{itemdescr}
 
 
@@ -431,25 +422,13 @@ T exchange(T desired, memory_order order = memory_order_seq_cst) const noexcept;
 
 \begin{itemdescr}
 \pnum
-\removed{Atomically replaces the value referenced by \tcode{*ptr}
-with \tcode{desired}.}
-\begin{addedblock}
-\effects Equivalent to atomically performing the following:
-\begin{codeblock}
-  alignas(T) char result[sizeof(T)];
-  memcpy(result, ptr, sizeof(T));
-  memcpy(ptr, std::addressof(desired), sizeof(T));
-  return *reinterpret_cast<T*>(result);
-\end{codeblock}
-\end{addedblock}
+\effects Atomically replaces the value referenced by \tcode{*ptr} with \tcode{desired}.
 Memory is affected according to the value of \tcode{order}.
 This operation is an atomic read-modify-write operation\iref{intro.multithread}.
 
-\begin{removedblock}
 \pnum
 \returns Atomically returns the value referenced by \tcode{*ptr}
 immediately before the effects.
-\end{removedblock}
 \end{itemdescr}
 
 
@@ -487,7 +466,7 @@ the value \tcode{memory_order_relaxed}.
 \begin{addedblock}
 Equivalent to atomically performing the following:
 \begin{codeblock}
-  alignas(T) char old[sizeof(T)];
+  alignas(T) unsigned char old[sizeof(T)];
   memcpy(old, ptr, sizeof(T));
   bool result = 0 == memcmp(std::addressof(expected), old, sizeof(T));
   if (result) memcpy(ptr, std::addressof(desired), sizeof(T));
