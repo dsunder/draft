@@ -388,14 +388,8 @@ void store(T desired, memory_order order = memory_order_seq_cst) const noexcept;
 \tcode{memory_order_acq_rel}.
 
 \pnum
-\removed{Atomically replaces the value referenced by \tcode{*ptr}
-with the value of \tcode{desired}}.
-\begin{addedblock}
-\effects Equivalent to atomically performing the following:
-\begin{codeblock}
-  memcpy(ptr, std::addressof(desired), sizeof(T));
-\end{codeblock}
-\end{addedblock}
+\effects Atomically replaces the value referenced by \tcode{*ptr}
+with the value of \tcode{desired}.
 Memory is affected according to the value of \tcode{order}.
 \end{itemdescr}
 
