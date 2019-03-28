@@ -460,7 +460,7 @@ the value \tcode{memory_order_relaxed}.
 \begin{addedblock}
 Equivalent to atomically performing the following:
 \begin{codeblock}
-  alignas(T) unsigned char old[sizeof(T)];
+  alignas(T) std::byte old[sizeof(T)];
   memcpy(old, ptr, sizeof(T));
   bool result = 0 == memcmp(std::addressof(expected), old, sizeof(T));
   if (result) memcpy(ptr, std::addressof(desired), sizeof(T));
