@@ -132,7 +132,7 @@ and hardware. The finest resolution provided by an implementation is called the
 \term{native resolution}.
 
 \pnum
-Implementation-provided clocks that are used for these functions \removed{shall} satisfy the
+Implementation-provided clocks that are used for these functions \removed{shall satisfy}\added{meet} the
 \oldconcept{TrivialClock} requirements\iref{time.clock.req}.
 
 \pnum
@@ -505,6 +505,14 @@ template<class F, class... Args> explicit thread(F&& f, Args&&... args);
 \end{itemdecl}
 
 \begin{itemdescr}
+\pnum
+\added{\mandates 
+\tcode{%
+\placeholdernc{INVOKE}(\brk{}%
+\placeholdernc{decay-copy}(std::forward<F>(f)),%
+\placeholdernc{decay-copy}(std::forward<Args>({}args))...)}\iref{func.require}
+is a valid expression.
+}
 
 \added{\pnum}
 \removed{\remarks}\added{\constraints} 
@@ -513,13 +521,14 @@ is \added{not} the same type as \tcode{std::thread}.
 
 \pnum
 \removed{\requires}\added{\expects}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} 
-\removed{shall} satisfy the
+\removed{shall satisfy}\added{meet} the
 \oldconcept{MoveConstructible} requirements.
+\removed{
 \tcode{%
 \placeholdernc{INVOKE}(\brk{}%
 \placeholdernc{decay-copy}(std::forward<F>(f)),%
 \placeholdernc{decay-copy}(std::forward<Args>({}args))...)}\iref{func.require}
-\removed{shall be}\added{is} a valid expression.
+shall be a valid expression.}
 
 \pnum
 \effects\ \removed{Constructs an object of type \tcode{thread}.} The new thread of execution executes
@@ -877,11 +886,11 @@ recursive and non-recursive mutexes are supplied.
 The \defn{mutex types} are the standard library types \tcode{mutex},
 \tcode{recursive_mutex}, \tcode{timed_mutex}, \tcode{recursive_timed_mutex},
 \tcode{shared_mutex}, and \tcode{shared_timed_mutex}.
-They \removed{shall} satisfy the requirements set out in this subclause. In this description, \tcode{m}
+They \removed{shall satisfy}\added{meet} the requirements set out in this subclause. In this description, \tcode{m}
 denotes an object of a mutex type.
 
 \pnum
-The mutex types \removed{shall} satisfy the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
+The mutex types \removed{shall satisfy}\added{meet} the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
 
 \pnum
 The mutex types \removed{shall be}\added{meet} \oldconcept{DefaultConstructible} and \oldconcept{Destructible}. If
@@ -1050,7 +1059,7 @@ contains a mutex that is used to protect the reference count.
 \end{note}
 
 \pnum
-The class \tcode{mutex} \removed{shall satisfy}\added{satisfies} all of the mutex
+The class \tcode{mutex} \removed{shall satisfy}\added{meets} all of the mutex
 requirements\iref{thread.mutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
@@ -1094,7 +1103,7 @@ thread to acquire ownership of that object will fail (for \tcode{try_lock()}) or
 (for \tcode{lock()}) until the first thread has completely released ownership.
 
 \pnum
-The class \tcode{recursive_mutex} \removed{shall satisfy}\added{satisfies} all of the mutex
+The class \tcode{recursive_mutex} \removed{shall satisfy}\added{meets} all of the mutex
 requirements\iref{thread.mutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
@@ -1121,7 +1130,7 @@ The behavior of a program is undefined if:
 
 \pnum
 The \defn{timed mutex types} are the standard library types \tcode{timed_mutex},
-\tcode{recursive_timed_mutex}, and \tcode{shared_timed_mutex}. They \removed{shall meet}\added{satisfy}
+\tcode{recursive_timed_mutex}, and \tcode{shared_timed_mutex}. They \removed{shall} meet
 the requirements set out below.
 In this description, \tcode{m} denotes an object of a mutex type,
 \tcode{rel_time} denotes an object of an
@@ -1130,7 +1139,7 @@ object of an
 instantiation of \tcode{time_point}\iref{time.point}.
 
 \pnum
-The timed mutex types \removed{shall} satisfy the \oldconcept{TimedLockable}
+The timed mutex types \removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable}
 requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -1237,7 +1246,7 @@ call to \tcode{try_lock_for()} or \tcode{try_lock_until()} times out (having
 failed to obtain ownership).
 
 \pnum
-The class \tcode{timed_mutex} \removed{shall satisfy}\added{satisfies} all of the timed mutex
+The class \tcode{timed_mutex} \removed{shall satisfy}\added{meets} all of the timed mutex
 requirements\iref{thread.timedmutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
@@ -1288,7 +1297,7 @@ ownership or the call to \tcode{try_lock_for()} or \tcode{try_lock_until()}
 times out (having failed to obtain ownership).
 
 \pnum
-The class \tcode{recursive_timed_mutex} \removed{shall satisfy}\added{satisfies} all of the timed mutex
+The class \tcode{recursive_timed_mutex} \removed{shall satisfy}\added{meets} all of the timed mutex
 requirements\iref{thread.timedmutex.requirements}. It \removed{shall be}\added{is} a standard-layout
 class\iref{class.prop}.
 
@@ -1319,9 +1328,9 @@ The behavior of a program is undefined if:
 
 \pnum
 The standard library types \tcode{shared_mutex} and \tcode{shared_timed_mutex}
-are \defn{shared mutex types}. Shared mutex types \removed{shall} satisfy the requirements of
+are \defn{shared mutex types}. Shared mutex types \removed{shall satisfy}\added{meet} the requirements of
 mutex types\iref{thread.mutex.requirements.mutex}\removed{,} and additionally
-\removed{shall} satisfy the requirements set out below. In this description,
+\removed{shall satisfy}\added{meet} the requirements set out below. In this description,
 \tcode{m} denotes an object of a shared mutex type.
 
 \pnum
@@ -1456,7 +1465,7 @@ The class \tcode{shared_mutex} provides a non-recursive mutex
 with shared ownership semantics.
 
 \pnum
-The class \tcode{shared_mutex} \removed{shall satisfy}\added{satisfies} all of the
+The class \tcode{shared_mutex} \removed{shall satisfy}\added{meet} all of the
 shared mutex requirements\iref{thread.sharedmutex.requirements}.
 It \removed{shall be}\added{is} a standard-layout class\iref{class.prop}.
 
@@ -1475,10 +1484,10 @@ The behavior of a program is undefined if:
 
 \pnum
 The standard library type \tcode{shared_timed_mutex} is a
-\defn{shared timed mutex type}. Shared timed mutex types \removed{shall} satisfy the requirements of
+\defn{shared timed mutex type}. Shared timed mutex types \removed{shall satisfy}\added{meet} the requirements of
 timed mutex types\iref{thread.timedmutex.requirements},
 shared mutex types\iref{thread.sharedmutex.requirements}, and additionally
-\removed{shall} satisfy the requirements set out below. In this description,
+\removed{shall satisfy}\added{meet} the requirements set out below. In this description,
 \tcode{m} denotes an object of a shared timed mutex type,
 \tcode{rel_type} denotes an object of an instantiation of
 \tcode{duration}\iref{time.duration}, and
@@ -1596,7 +1605,7 @@ The class \tcode{shared_timed_mutex} provides a non-recursive mutex with shared
 ownership semantics.
 
 \pnum
-The class \tcode{shared_timed_mutex} \removed{shall satisfy}\added{satisfies} all of the
+The class \tcode{shared_timed_mutex} \removed{shall satisfy}\added{meets} all of the
 shared timed mutex requirements\iref{thread.sharedtimedmutex.requirements}.
 It \removed{shall be}\added{is} a standard-layout class\iref{class.prop}.
 
@@ -1672,7 +1681,7 @@ within a scope. A \tcode{lock_guard} object maintains ownership of a lockable
 object throughout the \tcode{lock_guard} object's lifetime\iref{basic.life}.
 The behavior of a program is undefined if the lockable object referenced by
 \tcode{pm} does not exist for the entire lifetime of the \tcode{lock_guard}
-object. The supplied \tcode{Mutex} type \removed{shall satisfy}\added{satisfies}
+object. The supplied \tcode{Mutex} type \removed{shall satisfy}\added{meets}
 the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
 
 \indexlibrary{\idxcode{lock_guard}!constructor}%
@@ -1748,9 +1757,9 @@ The behavior of a program is undefined if the lockable objects referenced by
 object.
 When \tcode{sizeof...(MutexTypes)} is \tcode{1},
 the supplied \tcode{Mutex} type
-\removed{shall satisfy}\added{satisfies} the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
+\removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable} requirements\iref{thread.req.lockable.basic}.
 Otherwise, each of the mutex types
-\removed{shall} satisfy the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
+\removed{shall satisfy}\added{meet} the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
 
 \indexlibrary{\idxcode{scoped_lock}!constructor}%
 \begin{itemdecl}
@@ -1863,7 +1872,7 @@ copyable but are movable. The behavior of a program is undefined if the containe
 \tcode{pm} is not null and the lockable object pointed
 to by \tcode{pm} does not exist for the entire remaining
 lifetime\iref{basic.life} of the \tcode{unique_lock} object. The supplied
-\tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the \oldconcept{BasicLockable}
+\tcode{Mutex} type \removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable}
 requirements\iref{thread.req.lockable.basic}.
 
 \pnum
@@ -1926,7 +1935,7 @@ unique_lock(mutex_type& m, try_to_lock_t);
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects}
-The supplied \tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable}
+The supplied \tcode{Mutex} type \removed{shall satisfy}\added{meets} the \oldconcept{Lockable}
 requirements\iref{thread.req.lockable.req}.
 If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
 
@@ -1967,7 +1976,7 @@ template<class Clock, class Duration>
 \pnum
 \removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex 
 the calling thread does not own the mutex. 
-The supplied \tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the
+The supplied \tcode{Mutex} type \removed{shall satisfy}\added{meets} the
 \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -1988,7 +1997,7 @@ template<class Rep, class Period>
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
-The supplied \tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+The supplied \tcode{Mutex} type \removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects \removed{Constructs an object of type \tcode{unique_lock} and calls}\added{Calls} \tcode{m.try_lock_for(rel_time)}.
@@ -2069,7 +2078,7 @@ bool try_lock();
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} The supplied \tcode{Mutex} 
-\removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable}
+\removed{shall satisfy}\added{meets} the \oldconcept{Lockable}
 requirements\iref{thread.req.lockable.req}.
 
 \pnum
@@ -2104,7 +2113,7 @@ template<class Clock, class Duration>
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} The supplied \tcode{Mutex} type 
-\removed{shall satisfy}\added{satisfies} the \oldconcept{TimedLockable}
+\removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable}
 requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -2139,7 +2148,7 @@ template<class Rep, class Period>
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} The supplied \tcode{Mutex} type 
-\removed{shall satisfy}\added{satisfies} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+\removed{shall satisfy}\added{meets} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects As if by \tcode{pm->try_lock_for(rel_time)}.
@@ -2308,7 +2317,7 @@ acquisition, to another \tcode{shared_lock} object. Objects of type
 is undefined if the contained pointer \tcode{pm} is not null and the lockable
 object pointed to by \tcode{pm} does not exist for the entire remaining
 lifetime\iref{basic.life} of the \tcode{shared_lock} object. The supplied
-\tcode{Mutex} type \removed{shall satisfy}\added{satisfies} the shared mutex
+\tcode{Mutex} type \removed{shall satisfy}\added{meets} the shared mutex
 requirements\iref{thread.sharedtimedmutex.requirements}.
 
 \pnum
@@ -2688,7 +2697,7 @@ template<class L1, class L2, class... L3> int try_lock(L1&, L2&, L3&...);
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} Each template parameter type 
-\removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable} requirements. \begin{note} The
+\removed{shall satisfy}\added{meets} the \oldconcept{Lockable} requirements. \begin{note} The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
 \end{note}
 
@@ -2713,7 +2722,7 @@ template<class L1, class L2, class... L3> void lock(L1&, L2&, L3&...);
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} Each template parameter type 
-\removed{shall satisfy}\added{satisfies} the \oldconcept{Lockable} requirements,
+\removed{shall satisfy}\added{meets} the \oldconcept{Lockable} requirements,
 \begin{note} The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
 \end{note}
@@ -2908,7 +2917,7 @@ or \tcode{wait_until}) threads.
 \effects Transfers ownership of the lock associated with \tcode{lk} into
 internal storage and schedules \tcode{cond} to be notified when the current
 thread exits, after all objects of thread storage duration associated with
-the current thread have been destroyed. This notification \removed{shall be as if}\added{is equilavent to}:
+the current thread have been destroyed. This notification \removed{shall be as if}\added{is equivalent to}:
 \begin{codeblock}
 lk.unlock();
 cond.notify_all();
@@ -3322,7 +3331,7 @@ exceptions\iref{thread.req.timing} or any exception thrown by \tcode{pred}.
 \rSec2[thread.condition.condvarany]{Class \tcode{condition_variable_any}}
 
 \pnum
-A \tcode{Lock} type \removed{shall satisfy}\added{satisfies} the \oldconcept{BasicLockable}
+A \tcode{Lock} type \removed{shall satisfy}\added{meets} the \oldconcept{BasicLockable}
 requirements\iref{thread.req.lockable.basic}. \begin{note} All of the standard
 mutex types meet this requirement. If a \tcode{Lock} type other than one of the
 standard mutex types or a \tcode{unique_lock} wrapper for a standard mutex type
@@ -3931,7 +3940,7 @@ template<class R, class Alloc>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\expects} \tcode{Alloc} \removed{shall satisfy}\added{satisfies} the \oldconcept{Allocator}
+\removed{\requires}\added{\expects} \tcode{Alloc} \removed{shall satisfy}\added{meets} the \oldconcept{Allocator}
 requirements (\tref{utilities.allocator.requirements}).
 \end{itemdescr}
 
@@ -4802,7 +4811,7 @@ shall satisfy the \oldconcept{MoveConstructible} requirements, and}
 \removed{shall be}\added{is} a valid expression.
 
 \added{\pnum
-\expects \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} satisfy the \oldconcept{MoveConstructible} requirements.}
+\expects \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} meet the \oldconcept{MoveConstructible} requirements.}
 
 \pnum
 \effects
