@@ -1,8 +1,24 @@
 %!TEX root = std.tex
 \section*{Motivation}
 
-Enable implementations of \tcode{atomic_ref} which do not require a global lock array
-while perserving current behavior as much as possible.
+Many implementations cannot support the current specification of \tcode{atomic_ref}
+for non lock-free types.  Also, using an \tcode{atomic_ref} of an insufficiently aligned object 
+of a lock-free type can fail silently, leading to subtle and difficult to debug
+errors.
+
+There are proposals \textit{citation needed} to remove non lock-free \tcode{atomic_ref}
+from freestanding.  However, since implementations are not required to support
+lock-free atomic operations, these proposals remove the ability of using \tcode{atomic_ref}
+in portable code.
+
+The following proposal extends the \tcode{atomic_ref} specification to allow more
+implementations to fully support \tcode{atomic_ref} on objects which cannot be 
+lock-free.  This proposal preserves the existing behavior of \tcode{atomic_ref}
+in implementations which can support the current specification while enabling 
+additional implementations.
+
+\textit{Question to reviewers:  Should \tcode{atomic_ref} also provide deduction guides?}
+
 
 \section*{Proposed Wording}
 
@@ -37,7 +53,7 @@ namespace std {
   public:
     @\added{using lock_type = LockT;}@
     using value_type = T;
-    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
     @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
@@ -98,7 +114,7 @@ lock.
 \pnum
 \tcode{atomic_ref} instances referencing the same value of \tcode{ptr} and \tcode{ulock} are 
 called \textit{equivalent}. Concurrent access to the same value through 
-equivalent \tcode{atomic_ref} instances does not create a data race. 
+equivalent \tcode{atomic_ref} instances does not create a data race\iref{intro.races}. 
 \begin{note} Concurrent access to the value directly, or through a non-equivalent
 \tcode{atomic_ref} instance, can introduce a data race.
 \end{note}
@@ -136,7 +152,9 @@ static constexpr size_t required_@\added{lock_free_}@alignment;
 \begin{itemdescr}
 \pnum
 The alignment required for an object to be referenced \added{lock-free} by an atomic reference,
-which is at least \tcode{alignof(T)}.
+which is at least \tcode{alignof(T)}. \added{If the implementation cannot support
+lock-free operations on objects of type \tcode{T} then \tcode{required_lock_free_alignment} 
+is \tcode{0}.}
 
 \pnum
 \begin{note}
@@ -215,7 +233,7 @@ explicit atomic_ref(T& obj) noexcept;
  
 \pnum
 \begin{addedblock}
-\remarks Calls \tcode{terminate()} if \tcode{requires_user_lock(obj)} is \tcode{true}.
+\remarks The implementation calls \tcode{terminate()} if \tcode{requires_user_lock(obj)} is \tcode{true}.
 \end{addedblock}
 \end{itemdescr}
 
@@ -227,7 +245,7 @@ atomic_ref(T& obj, atomic_ref_assume_lock_free_t);
 
 \begin{itemdescr}
 \pnum
-\expects The object referenced \tcode{obj} is be aligned to \tcode{required_lock_free_alignment}.
+\expects \tcode{is_lock_free(obj)} is \tcode{true}.
 
 \pnum
 \effects Equivalent to:
@@ -303,7 +321,8 @@ a reference to a \tcode{lock_type} object.
 \pnum
 \expects If \tcode{requires_user_lock(obj)} is \tcode{true} then the 
 range \tcode{lks} is non-empty and \tcode{INVOKE(sel(obj, lks))} returns a
-reference to a \tcode{lock_type} object in the range of \tcode{lks}. 
+reference to the same \tcode{lock_type} object in the range \tcode{lks} for
+all \tcode{obj} which reference the same value. 
 
 \pnum
 \effects Equivalent to:
@@ -317,7 +336,7 @@ reference to a \tcode{lock_type} object in the range of \tcode{lks}.
 \throws Nothing.
 
 \pnum
-\remarks Calls \tcode{terminate} if the range \tcode{lks} is empty and
+\remarks The implementation can call \tcode{terminate} if the range \tcode{lks} is empty and
 \tcode{requires_user_lock(obj)} is \tcode{true}.
 
 \end{itemdescr}
@@ -338,7 +357,8 @@ a reference to a \tcode{lock_type} object.
 
 \pnum
 \expects The range \tcode{lks} is non-empty and \tcode{INVOKE(sel(obj, lks))} returns a
-reference to a \tcode{lock_type} object in the range of \tcode{lks}. 
+reference to the same \tcode{lock_type} object in the range \tcode{lks} for
+all \tcode{obj} which reference the same value. 
 
 \pnum
 \effects Equivalent to:
@@ -540,7 +560,7 @@ namespace std {
     @\added{using lock_type = LockT;}@
     using value_type = @\placeholder{integral}@;
     using difference_type = value_type;
-    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
     @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
@@ -615,7 +635,7 @@ namespace std {
     @\added{using lock_type = LockT;}@
     using value_type = @\placeholder{floating-point}@;
     using difference_type = value_type;
-    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
     @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
@@ -677,7 +697,7 @@ namespace std {
     @\added{using lock_type = LockT;}@
     using value_type = T*;
     using difference_type = ptrdiff_t;
-    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock free}@;
+    static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
     @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
 
