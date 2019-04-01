@@ -1,7 +1,7 @@
 %!TEX root = std.tex
 \section*{Motivation}
 
-Many implementations cannot support the current specification of \tcode{atomic_ref}
+Many implementations does not support the current specification of \tcode{atomic_ref}
 for non lock-free types.  Also, using an \tcode{atomic_ref} of an insufficiently aligned object 
 of a lock-free type can fail silently, leading to subtle and difficult to debug
 errors.
@@ -12,7 +12,7 @@ lock-free atomic operations, these proposals remove the ability of using \tcode{
 in portable code.
 
 The following proposal extends the \tcode{atomic_ref} specification to allow more
-implementations to fully support \tcode{atomic_ref} on objects which cannot be 
+implementations to fully support \tcode{atomic_ref} on objects which does not be 
 lock-free.  This proposal preserves the existing behavior of \tcode{atomic_ref}
 in implementations which can support the current specification while enabling 
 additional implementations.
@@ -103,11 +103,11 @@ The type \tcode{lock_type} can be \tcode{atomic_ref_assume_lock_free_t},
 \tcode{atomic_ref_assume_no_user_lock_t}, or the type \tcode{lock_type} meets the
 \oldconcept{BasicLockable} requirements.  
 If \tcode{lock_type} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-it is a diagnosable error if the implementation cannot provide lock-free atomic
+it is a diagnosable error if the implementation does not provide lock-free atomic
 operations for  objects of type \tcode{T} aligned to
 \tcode{required_lock_free_alignment}.
 If \tcode{lock_type} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t} 
-it is a diagnosable error if the implementation cannot provide atomic
+it is a diagnosable error if the implementation does not provide atomic
 operations for  objects of type \tcode{T} which do not require a user provided
 lock.
 
@@ -152,7 +152,7 @@ static constexpr size_t required_@\added{lock_free_}@alignment;
 \begin{itemdescr}
 \pnum
 The alignment required for an object to be referenced \added{lock-free} by an atomic reference,
-which is at least \tcode{alignof(T)}. \added{If the implementation cannot support
+which is at least \tcode{alignof(T)}. \added{If the implementation does not support
 lock-free operations on objects of type \tcode{T} then \tcode{required_lock_free_alignment} 
 is \tcode{0}.}
 
