@@ -22,9 +22,7 @@ additional implementations.
 
 \section*{Proposed Wording}
 
-\textbf{\textit{This font is used to provide guidance to the editors.}} \\
-
-\textbf{\textit{Make the following changes in [atomics.ref.generic].}} \\
+\ednote{Make the following changes in [atomics.ref.generic].} \\
 
 \indexlibrary{\idxcode{atomic_ref}}%
 \indexlibrarymember{value_type}{atomic_ref}%
@@ -32,12 +30,20 @@ additional implementations.
 \begin{addedblock}
 \begin{codeblock}
 namespace std {
-  struct atomic_ref_assume_lock_free_t    {};
-  struct atomic_ref_assume_no_user_lock_t {};
-  struct atomic_ref_prefer_user_lock_t    {};
-  
-  inline constexpr atomic_ref_assume_lock_free_t  atomic_ref_assume_lock_free {};
-  inline constexpr atomic_ref_prefer_user_lock_t  atomic_ref_prefer_user_lock {};
+  struct atomic_ref_prefer_user_lock_t { 
+    explicit constexpr atomic_ref_prefer_user_lock_t() noexcept = default;
+  };
+
+  struct atomic_ref_assume_lock_free_t {
+    explicit constexpr atomic_ref_assume_lock_free_t() noexcept = default;
+  };
+
+  struct atomic_ref_assume_no_user_lock_t {
+    explicit constexpr atomic_ref_assume_no_user_lock_t() noexcept = default;
+  };
+
+  inline constexpr atomic_ref_prefer_user_lock_t  atomic_ref_prefer_user_lock{};
+  inline constexpr atomic_ref_assume_lock_free_t atomic_ref_assume_lock_free{};
 }
 \end{codeblock}
 \end{addedblock}
@@ -48,7 +54,7 @@ namespace std {
 
   template<class T@\added{, class LockT=\unspec}@> struct atomic_ref {
   private:
-    T* ptr;      // \expos
+    T* ptr; // \expos
     @\added{lock_type* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
@@ -68,11 +74,6 @@ namespace std {
     @\added{\tcode{atomic_ref(T\&, lock_type\&) noexcept;}}@
     @\added{\tcode{atomic_ref(T\&, lock_type\&, atomic_ref_prefer_user_lock_t) noexcept;}}@
     
-    @\added{\tcode{template<class Select> atomic_ref(T\&, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{Select = \unspec ) noexcept;}}@
-    @\added{\tcode{template<class Select> atomic_ref(T\&, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
-
     atomic_ref(const atomic_ref&) noexcept;
 
     T operator=(T) const noexcept;
@@ -95,20 +96,24 @@ namespace std {
 \end{codeblock}
 ~\\
 
-\textbf{\textit{Make the following changes in [atomics.ref.operations].}} \\
+\ednote{Make the following changes in [atomics.ref.operations].} \\
 
 \begin{addedblock}
 \pnum
-The type \tcode{lock_type} can be \tcode{atomic_ref_assume_lock_free_t},
-\tcode{atomic_ref_assume_no_user_lock_t}, or the type \tcode{lock_type} meets the
-\oldconcept{BasicLockable} requirements.  
-If \tcode{lock_type} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
-it is a diagnosable error if the implementation does not provide lock-free atomic
-operations for  objects of type \tcode{T} aligned to
+The type \tcode{lock_type} can either:
+\begin{itemize}
+\item be equivalent to \tcode{atomic_ref_assume_lock_free_t},
+\item be equivalent to \tcode{atomic_ref_assume_no_user_lock_t}, or
+\item the type \tcode{lock_type} meets the \oldconcept{BasicLockable} requirements.  
+\end{itemize}
+Dianostics are required if \tcode{lock_type} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
+and the implementation does not provide lock-free atomic
+operations for objects of type \tcode{T} aligned to \\
 \tcode{required_lock_free_alignment}.
-If \tcode{lock_type} is equivalent to \tcode{atomic_ref_assume_no_user_lock_t} 
-it is a diagnosable error if the implementation does not provide atomic
-operations for  objects of type \tcode{T} which do not require a user provided
+Diagnostics are required if \tcode{lock_type} is equivalent to \\
+\tcode{atomic_ref_assume_no_user_lock_t} 
+and the implementation does not provide atomic
+operations for objects of type \tcode{T} which do not require a user provided
 lock.
 
 \pnum
@@ -121,15 +126,17 @@ equivalent \tcode{atomic_ref} instances does not create a data race\iref{intro.r
 
 \pnum
 For all \tcode{atomic_ref} member functions excluding static methods, constructors, 
-the destructor, and \\ \tcode{is_lock_free()} one of the following statements is \tcode{true}:
+the destructor, and \\ \tcode{is_lock_free()} the following is \tcode{true}:
 \begin{itemize}
 \item If \tcode{ulock} points to a valid \tcode{lock_type} object which meets the 
-\oldconcept{BasicLockable} requirements then 
-the implementation will use \tcode{ulock} to atomically perform these methods.
-If \tcode{lock_type} does not meet the \oldconcept{BasicLockable} requirements then 
-these methods can introduce a data race.
-\item Otherwise, if \tcode{ulock} is equivalent to \tcode{nullptr} then
-the implementation will ensure that these methods happen atomically.
+  \oldconcept{BasicLockable} requirements then 
+  the implementation will use \tcode{ulock} to atomically perform these methods.
+  \begin{note}If \tcode{lock_type} does not meet the \oldconcept{BasicLockable} requirements then 
+  these methods can introduce a data race. \end{note}
+\item If \tcode{ulock} is equivalent to \tcode{nullptr} and
+  \tcode{requires_user_lock(obj)} is \tcode{false} then
+  the implementation will ensure that these methods happen atomically.
+\item Otherwise, use of any of these methods can introduce a data race. 
 \end{itemize}
 \end{addedblock}
 
@@ -200,9 +207,10 @@ static requires_user_lock(T& obj) noexcept;
 \begin{itemdescr}
 \returns Returns \tcode{false} if \tcode{lock_type} is equivalent to either
 \tcode{atomic_ref_assume_lock_free_t} or \tcode{atomic_ref_assume_no_user_lock_t}.
+Returns \tcode{true} if \tcode{lock_type} is equivalent to \\
+\tcode{atomic_ref_assume_lock_free_t}.
 Otherwise, returns \tcode{true} if \tcode{atomic_ref} requires the user to
 provide a valid reference to a \tcode{lock_type} object 
-or a non-empty \\ \tcode{ranges::RandomAccessRange<lock_type>} 
 when constructing an \tcode{atomic_ref} from \tcode{obj}. 
 \end{itemdescr}
 \end{addedblock}
@@ -215,13 +223,12 @@ explicit atomic_ref(T& obj) noexcept;
 \begin{itemdescr}
 \pnum
 \removed{\requires The referenced object shall be aligned to \tcode{required_lock_free_alignment}}.
-\begin{addedblock}
-\expects \tcode{requires_user_lock(obj)} is \tcode{false}.
-\end{addedblock}
 
 \pnum
 \effects \removed{Constructs an atomic reference that references the object.}\\
-\begin{addedblock}Equivalent to:
+\begin{addedblock}
+If \tcode{requires_user_lock(obj)} is \tcode{true} calls \tcode{std::terminate()}.
+Otherwise, equivalent to:
 \begin{codeblock}
   ptr = std::addressof(obj);
   ulock = nullptr;
@@ -231,10 +238,6 @@ explicit atomic_ref(T& obj) noexcept;
 \pnum
 \throws Nothing.
  
-\pnum
-\begin{addedblock}
-\remarks The implementation calls \tcode{terminate()} if \tcode{requires_user_lock(obj)} is \tcode{true}.
-\end{addedblock}
 \end{itemdescr}
 
 
@@ -256,9 +259,6 @@ atomic_ref(T& obj, atomic_ref_assume_lock_free_t);
 
 \pnum
 \throws Nothing.
-
-\pnum
-\remarks The implementation can call \tcode{terminate} if \tcode{is_lock_free(obj)} is \tcode{false}.
 
 \end{itemdescr}
 \end{addedblock}
@@ -296,85 +296,13 @@ atomic_ref(T& obj, lock_type& lk, atomic_ref_prefer_user_lock_t);
 \effects Equivalent to:
 \begin{codeblock}
   ptr = std::addressof(obj);
-  ulock = is_lock_free(obj) ? nullptr : std::addressof(lk);
+  ulock = std::addressof(lk);
 \end{codeblock}
 
 \pnum
 \throws Nothing.
 \end{itemdescr}
 
-\end{addedblock}
-
-
-\begin{addedblock}
-\begin{itemdecl}
-template <class Select>
-atomic_ref(T& obj, ranges::RandomAccessRange<lock_type> lks, 
-  Select sel = @\unspec@ );
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-\mandates \tcode{INVOKE(sel(const T\&, ranges::RandomAccessRange<lock_type>))} returns
-a reference to a \tcode{lock_type} object.
-
-\pnum
-\expects If \tcode{requires_user_lock(obj)} is \tcode{true} then the 
-range \tcode{lks} is non-empty and \tcode{INVOKE(sel(obj, lks))} returns a
-reference to the same \tcode{lock_type} object in the range \tcode{lks} for
-all \tcode{obj} which reference the same value. 
-
-\pnum
-\effects Equivalent to:
-\begin{codeblock}
-  ptr = std::addressof(obj);
-  ulock = requires_user_lock(obj) ? 
-    std::addressof(INVOKE(sel(obj, lks))) : nullptr;
-\end{codeblock}
-
-\pnum
-\throws Nothing.
-
-\pnum
-\remarks The implementation can call \tcode{terminate} if the range \tcode{lks} is empty and
-\tcode{requires_user_lock(obj)} is \tcode{true}.
-
-\end{itemdescr}
-\end{addedblock}
-
-
-\begin{addedblock}
-\begin{itemdecl}
-template <class Select>
-atomic_ref(T& obj, ranges::RandomAccessRange<lock_type> lks,
-  atomic_ref_prefer_user_lock_t, Sel sel = @\unspec@ );
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-\mandates \tcode{INVOKE(sel(const T\&, ranges::RandomAccessRange<lock_type>))} returns
-a reference to a \tcode{lock_type} object.
-
-\pnum
-\expects The range \tcode{lks} is non-empty and \tcode{INVOKE(sel(obj, lks))} returns a
-reference to the same \tcode{lock_type} object in the range \tcode{lks} for
-all \tcode{obj} which reference the same value. 
-
-\pnum
-\effects Equivalent to:
-\begin{codeblock}
-  ptr = std::addressof(obj);
-  ulock = is_lock_free(obj) ? 
-    nullptr : std::addressof(INVOKE(sel(obj, lks)));
-\end{codeblock}
-
-\pnum
-\throws Nothing.
-
-\pnum
-\remarks The implementation can call \tcode{terminate} if the range \tcode{lks} is empty.
-
-\end{itemdescr}
 \end{addedblock}
 
 
@@ -494,6 +422,10 @@ If and only if \tcode{R} is \tcode{true},
 memory is affected according to the value of \tcode{success}, and
 if \tcode{R} is \tcode{false},
 memory is affected according to the value of \tcode{failure}.
+If the operation returns \tcode{true},
+these operations are atomic read-modify-write operations\iref{intro.races}
+on the value referenced by \tcode{*ptr}.
+Otherwise, these operations are atomic load operations on that memory.
 \end{addedblock}
 
 \begin{removedblock}
@@ -515,11 +447,11 @@ after the atomic operation,
 the value in \tcode{expected} is replaced by
 the value read from the value referenced by \tcode{*ptr}
 during the atomic comparison.
-\end{removedblock}
-If \removed{the operation returns}\added{\tcode{R} is} \tcode{true},
+If the operation returns \tcode{true},
 these operations are atomic read-modify-write operations\iref{intro.races}
 on the value referenced by \tcode{*ptr}.
 Otherwise, these operations are atomic load operations on that memory.
+\end{removedblock}
 
 \begin{removedblock}
 \pnum
@@ -548,14 +480,14 @@ a strong one would not, the strong one is preferable.
 ~\\
 ~\\
 
-\textbf{\textit{Make the following changes in [atomics.ref.int].}} \\
+\ednote{Make the following changes in [atomics.ref.int].} \\
 
 \begin{codeblock}
 namespace std {
   template<@\added{class LockT}@> struct atomic_ref<@\placeholder{integral}\added{, LockT}@> {
   private:
-    @\placeholder{integral}@* ptr;        // \expos
-    @\added{lock_type* ulock;  // \expos}@
+    @\placeholder{integral}@* ptr; // \expos
+    @\added{lock_type* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
     using value_type = @\placeholder{integral}@;
@@ -575,11 +507,6 @@ namespace std {
     @\added{atomic_ref(\placeholder{integral}\&, lock_type\&) noexcept;}@
     @\added{atomic_ref(\placeholder{integral}\&, lock_type\&, atomic_ref_prefer_user_lock_t) noexcept;}@
     
-    @\added{\tcode{template<class Select> atomic_ref(\placeholder{integral}\&, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{Select = \unspec ) noexcept;}}@
-    @\added{\tcode{template<class Select> atomic_ref(\placeholder{integral}\&, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
-
     atomic_ref(const atomic_ref&) noexcept;
 
     @\placeholdernc{integral}@ operator=(@\placeholder{integral}@) const noexcept;
@@ -623,14 +550,14 @@ namespace std {
 }
 \end{codeblock}
 
-\textbf{\textit{Make the following changes in [atomics.ref.float].}} \\
+\ednote{Make the following changes in [atomics.ref.float].} \\
 
 \begin{codeblock}
 namespace std {
   template<@\added{class LockT}@> struct atomic_ref<@\placeholder{floating-point}\added{, LockT}@> {
   private:
-    @\placeholder{floating-point}@* ptr;  // \expos
-    @\added{lock_type* ulock;  // \expos}@
+    @\placeholder{floating-point}@* ptr; // \expos
+    @\added{lock_type* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
     using value_type = @\placeholder{floating-point}@;
@@ -650,11 +577,6 @@ namespace std {
     @\added{atomic_ref(\placeholder{floating-point}\&, lock_type\&) noexcept;}@
     @\added{atomic_ref(\placeholder{floating-point}\&, lock_type\&, atomic_ref_prefer_user_lock_t) noexcept;}@
     
-    @\added{\tcode{template<class Select> atomic_ref(\placeholder{floating-point}\&, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{Select = \unspec ) noexcept;}}@
-    @\added{\tcode{template<class Select> atomic_ref(\placeholder{floating-point}\&, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
-
     atomic_ref(const atomic_ref&) noexcept;
 
     @\placeholder{floating-point}@ operator=(@\placeholder{floating-point}@) noexcept;
@@ -685,14 +607,14 @@ namespace std {
 }
 \end{codeblock}
 
-\textbf{\textit{Make the following changes in [atomics.ref.pointer].}} \\
+\ednote{Make the following changes in [atomics.ref.pointer].} \\
 
 \begin{codeblock}
 namespace std {
   template<class T@\added{,class LockT}@> struct atomic_ref<T*@\added{, LockT}@> {
   private:
-    T** ptr;              // \expos
-    @\added{lock_type* ulock;  // \expos}@
+    T** ptr; // \expos
+    @\added{lock_type* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
     using value_type = T*;
@@ -712,11 +634,6 @@ namespace std {
     @\added{atomic_ref(T*, lock_type\&) noexcept;}@
     @\added{atomic_ref(T*, lock_type\&, atomic_ref_prefer_user_lock_t) noexcept;}@
     
-    @\added{\tcode{template<class Select> atomic_ref(T*, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{Select = \unspec ) noexcept;}}@
-    @\added{\tcode{template<class Select> atomic_ref(T*, ranges::RandomAccessRange<lock_type>, }}@
-    @  \added{\tcode{atomic_ref_prefer_user_lock_t, Select = \unspec ) noexcept;}}@
-
     atomic_ref(const atomic_ref&) noexcept;
 
     T* operator=(T*) const noexcept;
