@@ -27,16 +27,15 @@ additional implementations.
 \begin{addedblock}
 \begin{codeblock}
 namespace std {
-  struct atomic_ref_prefer_user_lock_t { 
-    explicit constexpr atomic_ref_prefer_user_lock_t() noexcept = default;
-  };
-
   struct atomic_ref_assume_lock_free_t {
     explicit constexpr atomic_ref_assume_lock_free_t() noexcept = default;
   };
-
-  inline constexpr atomic_ref_prefer_user_lock_t atomic_ref_prefer_user_lock{};
   inline constexpr atomic_ref_assume_lock_free_t atomic_ref_assume_lock_free{};
+
+  struct atomic_ref_prefer_user_lock_t { 
+    explicit constexpr atomic_ref_prefer_user_lock_t() noexcept = default;
+  };
+  inline constexpr atomic_ref_prefer_user_lock_t atomic_ref_prefer_user_lock{};
 }
 \end{codeblock}
 \end{addedblock}
@@ -48,16 +47,18 @@ namespace std {
   template<class T@\added{, class LockT=\unspec}@> struct atomic_ref {
   private:
     T* ptr; // \expos
-    @\added{lock_type* ulock; // \expos}@
+    @\added{LockT* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
     using value_type = T;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
-    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+    @\added{static constexpr bool can_be_lock_free = required_lock_free_alignment > 0u;}@
+    
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
 
-    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
-    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
+    @\added{\tcode{static bool is_lock_free(const T\&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T\&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
@@ -110,7 +111,7 @@ namespace std {
 The type \tcode{lock_type} can either:
 \begin{itemize}
 \item be equivalent to \tcode{atomic_ref_assume_lock_free_t}, or
-\item the type \tcode{lock_type} meets the \oldconcept{BasicLockable} requirements.  
+\item the type \tcode{lock_type} meets the \oldconcept{Lockable} requirements.  
 \end{itemize}
 Dianostics required if \tcode{lock_type} is equivalent to \tcode{atomic_ref_assume_lock_free_t} 
 and the implementation does not provide lock-free atomic
@@ -127,12 +128,12 @@ equivalent \tcode{atomic_ref} instances does not create a data race\iref{intro.r
 
 \pnum
 For all \tcode{atomic_ref} member functions excluding static methods, constructors, 
-the destructor, and \\ \tcode{is_lock_free()} the following statement is \tcode{true}:
+the destructor, and \\ \tcode{is_lock_free()} the following conditionals are \tcode{true}:
 \begin{itemize}
 \item If \tcode{ulock} points to a valid \tcode{lock_type} object which meets the 
-  \oldconcept{BasicLockable} requirements then 
+  \oldconcept{Lockable} requirements then 
   the implementation will use \tcode{ulock} to atomically perform these methods.
-  \begin{note}If \tcode{lock_type} does not meet the \oldconcept{BasicLockable} requirements then 
+  \begin{note}If \tcode{lock_type} does not meet the \oldconcept{Lockable} requirements then 
   these methods can introduce a data race. \end{note}
 \item If \tcode{ulock} is equivalent to \tcode{nullptr} and
   \tcode{requires_user_lock(obj)} is \tcode{false} then
@@ -205,8 +206,9 @@ static requires_user_lock(T& obj) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\returns Returns \tcode{false} if \tcode{lock_type} is equivalent to either
-\tcode{atomic_ref_assume_lock_free_t}.
+\returns Returns \tcode{false} if \tcode{lock_type} is equivalent to
+\tcode{atomic_ref_assume_lock_free_t} or does not require the user to provide
+a valid reference to a \tcode{lock_type} object.
 Otherwise, returns \tcode{true} if \tcode{atomic_ref} requires the user to
 provide a valid reference to a \tcode{lock_type} object 
 when constructing an \tcode{atomic_ref} from \tcode{obj}. 
@@ -482,17 +484,19 @@ namespace std {
   template<@\added{class LockT}@> struct atomic_ref<@\placeholder{integral}\added{, LockT}@> {
   private:
     @\placeholder{integral}@* ptr; // \expos
-    @\added{lock_type* ulock; // \expos}@
+    @\added{LockT* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
     using value_type = @\placeholder{integral}@;
     using difference_type = value_type;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
-    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+    @\added{static constexpr bool can_be_lock_free = required_lock_free_alignment > 0u;}@
+    
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
 
-    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
-    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
+    @\added{\tcode{static bool is_lock_free(const T\&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T\&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
@@ -552,17 +556,19 @@ namespace std {
   template<@\added{class LockT}@> struct atomic_ref<@\placeholder{floating-point}\added{, LockT}@> {
   private:
     @\placeholder{floating-point}@* ptr; // \expos
-    @\added{lock_type* ulock; // \expos}@
+    @\added{LockT* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
     using value_type = @\placeholder{floating-point}@;
     using difference_type = value_type;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
-    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+    @\added{static constexpr bool can_be_lock_free = required_lock_free_alignment > 0u;}@
+    
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
 
-    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
-    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
+    @\added{\tcode{static bool is_lock_free(const T\&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T\&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
@@ -609,17 +615,19 @@ namespace std {
   template<class T@\added{,class LockT}@> struct atomic_ref<T*@\added{, LockT}@> {
   private:
     T** ptr; // \expos
-    @\added{lock_type* ulock; // \expos}@
+    @\added{LockT* ulock; // \expos}@
   public:
     @\added{using lock_type = LockT;}@
     using value_type = T*;
     using difference_type = ptrdiff_t;
     static constexpr bool is_always_lock_free = @\impdefx{whether a given \tcode{atomic_ref} type's operations are always lock-free}@;
-    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
     static constexpr size_t required_@\added{lock_free}_@alignment = @\impdefx{required alignment for \tcode{atomic_ref} type's operations}@;
+    @\added{static constexpr bool can_be_lock_free = required_lock_free_alignment > 0u;}@
+    
+    @\added{static constexpr bool never_requires_user_lock = \impdefx{};}@
 
-    @\added{\tcode{static bool is_lock_free(const T \&) noexcept;}}@
-    @\added{\tcode{static bool requires_user_lock(const T \&) noexcept;}}@
+    @\added{\tcode{static bool is_lock_free(const T\&) noexcept;}}@
+    @\added{\tcode{static bool requires_user_lock(const T\&) noexcept;}}@
 
     atomic_ref& operator=(const atomic_ref&) = delete;
 
