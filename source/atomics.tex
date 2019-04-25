@@ -715,7 +715,7 @@ atomic_ref(T& obj);
 
 \pnum
 \effects \removed{Constructs an atomic reference that references the object.}
-\added{Equilivant to: \tcode{ptr = \&obj}.}
+\added{Equivalent to: \tcode{ptr = std::addressof(obj)}.}
 
 \pnum
 \throws Nothing.
