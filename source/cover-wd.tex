@@ -6,12 +6,11 @@
 \thispagestyle{empty}
 \begingroup
 \def\hd{\begin{tabular}{ll}
-          \textbf{Document Number:} & {\larger\docno}             \\
-          \textbf{Date:}            & \reldate                    \\
-          \textbf{Revises:}         & \prevdocno                  \\
-          \textbf{Reply to:}        & Richard Smith               \\
-                                    & Google Inc                  \\
-                                    & cxxeditor@gmail.com
+          \textbf{Document Number:} & P1622R2                      \\
+          \textbf{Date:}            & \reldate                     \\
+          \textbf{Reply to:}        & Daniel Sunderland            \\
+                                    & Sandia National Laboratories \\
+                                    & dsunder@sandia.gov
           \end{tabular}
 }
 \newlength{\hdwidth}
@@ -22,10 +21,92 @@
 \vspace{2.5cm}
 \begin{center}
 \textbf{\Huge
-Working Draft, Standard for Programming Language \Cpp{}}
+Mandating the Standard Library:\\Clause 32 - Thread support library}
 \end{center}
-\vfill
-\textbf{Note: this is an early draft. It's known to be incomplet and
-  incorrekt, and it has lots of
-  b\kern-1.2pta\kern1ptd\hspace{1.5em}for\kern-3ptmat\kern0.6ptti\raise0.15ex\hbox{n}g.}
+
+With the adoption of P0788R3, we have a new way of specifying requirements for the
+library clauses of the standard. This is one of a series of papers reformulating the
+requirements into the new format. This effort was strongly influenced by the informational
+paper P1369R0.
+
+The changes in this series of papers fall into four broad categories.
+\begin{itemize}
+\item{Change "participate in overload resolution" wording into "Constraints" elements}
+\item{Change "Requires" elements into either "Mandates" or "Expects", depending (mostly) on whether or not they can be checked at compile time.}
+\item{Drive-by fixes (hopefully very few)}
+\end{itemize}
+
+This paper covers Clause 32 (Thread Support Library)
+
+%As a drive-by fix, I have removed a bunch of empty descriptions of the form: "Effects: Constructs an object of class \tcode{Foo}."
+
+The entire clause is reproduced here, but the changes are confined to a few sections:
+
+\begin{multicols}{2}
+\begin{itemize}
+\item{thread.req.paramname                  \ref{thread.req.paramname}}
+\item{thread.req.exception                  \ref{thread.req.exception}}
+\item{thread.req.lockable.general           \ref{thread.req.lockable.general}}
+\item{thread.req.lockable.basic             \ref{thread.req.lockable.basic}}
+\item{thread.thread.class                   \ref{thread.thread.class}}
+\item{thread.thread.constr                  \ref{thread.thread.constr}}
+\item{thread.thread.member                  \ref{thread.thread.member}}
+\item{thread.thread.this                    \ref{thread.thread.this}}
+\item{thread.mutex.requirements.mutex       \ref{thread.mutex.requirements.mutex}}
+\item{thread.mutex.class                    \ref{thread.mutex.class}}
+\item{thread.mutex.recursive                \ref{thread.mutex.recursive}}
+\item{thread.timedmutex.requirements        \ref{thread.timedmutex.requirements}}
+\item{thread.timedmutex.class               \ref{thread.timedmutex.class}}
+\item{thread.timedmutex.recursive           \ref{thread.timedmutex.recursive}}
+\item{thread.sharedmutex.requirements       \ref{thread.sharedmutex.requirements}}
+\item{thread.sharedmutex.class              \ref{thread.sharedmutex.class}}
+\item{thread.sharedtimedmutex.requirements  \ref{thread.sharedtimedmutex.requirements}}
+\item{thread.sharedtimedmutex.class         \ref{thread.sharedtimedmutex.class}}
+\item{thread.lock                           \ref{thread.lock}}
+\item{thread.lock.guard                     \ref{thread.lock.guard}}
+\item{thread.lock.scoped                    \ref{thread.lock.scoped}}
+\item{thread.lock.unique                    \ref{thread.lock.unique}}
+\item{thread.lock.unique.cons               \ref{thread.lock.unique.cons}}
+\item{thread.lock.unique.locking            \ref{thread.lock.unique.locking}}
+\item{thread.lock.shared                    \ref{thread.lock.shared}}
+\item{thread.lock.shared.cons               \ref{thread.lock.shared.cons}}
+\item{thread.lock.algorithm                 \ref{thread.lock.algorithm}}
+\item{thread.once.onceflag                  \ref{thread.once.onceflag}}
+\item{thread.once.callonce                  \ref{thread.once.callonce}}
+\item{thread.condition                      \ref{thread.condition}}
+\item{thread.condition.nonmember            \ref{thread.condition.nonmember}}
+\item{thread.condition.condvar              \ref{thread.condition.condvar}}
+\item{thread.condition.condvarany           \ref{thread.condition.condvarany}}
+\item{futures.errors                        \ref{futures.errors}}
+\item{futures.future_error                  \ref{futures.future.error}}
+\item{futures.state                         \ref{futures.state}}
+\item{futures.promise                       \ref{futures.promise}}
+\item{futures.unique_future                 \ref{futures.unique.future}}
+\item{futures.shared_future                 \ref{futures.shared.future}}
+\item{futures.async                         \ref{futures.async}}
+\item{futures.task.members                  \ref{futures.task.members}}
+
+\end{itemize}
+\end{multicols}
+
+%Changes from R0:
+%\begin{itemize}
+%\item{Added a "Mandates" to ptr.launder \ref{ptr.launder}}
+%\end{itemize}
+
+\vspace*{\fill}
+
+Help for the editors: The changes here can be viewed as latex sources with the following commands
+\begin{verbatim}
+git clone git@github.com:dsunder/draft.git dsunder-draft
+cd dsunder-draft
+git diff master..P1622 -- source/threads.tex
+\end{verbatim}
+
+
+\textit{Sandia National Laboratories is a multimission laboratory managed and operated
+by National Technology \& Engineering Solutions of Sandia, LLC, a wholly owned
+subsidiary of Honeywell International Inc., for the U.S. Department of Energy’s
+National Nuclear Security Administration under contract DE-NA0003525.
+}
 \newpage
