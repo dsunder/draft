@@ -1560,6 +1560,7 @@ template<class F, class... Args> explicit jthread(F&& f, Args&&... args);
 
 \begin{itemdescr}
 \pnum
+\begin{removedblock}
 \requires
 \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} meet the
 \oldconcept{MoveConstructible} requirements.
@@ -1573,6 +1574,15 @@ is a valid expression or
 @\placeholdernc{INVOKE}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)), @\placeholdernc{decay-copy}@(std::forward<Args>(args))...)
 \end{codeblock}
 is a valid expression.
+\end{removedblock}
+\begin{addedblock}
+\mandates The following are all \tcode{true}:
+\begin{itemize}
+\item \tcode{is_move_constructible<decay_t<F>>},
+\item \tcode{(is_move_constructible<decay_t<Args>> \&\& ...)}, and
+\item \tcode{is_invocable_v<decay_t<F>, decay_t<Arg>...>}.
+\end{itemize} 
+\end{addedblock}
 
 \pnum
 \constraints
@@ -1580,8 +1590,8 @@ is a valid expression.
 
 \pnum
 \effects
-Initializes \tcode{ssource} and
-constructs an object of type \tcode{jthread}.
+Initializes \tcode{ssource} \removed{and
+constructs an object of type \tcode{jthread}}.
 The new thread of execution executes
 \begin{codeblock}
 @\placeholdernc{INVOKE}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)), get_stop_token(),
@@ -1638,9 +1648,9 @@ jthread(jthread&& x) noexcept;
 
 \begin{itemdescr}
 \pnum
-\effects
+\removed{\effects
 Constructs an object of type \tcode{jthread} from \tcode{x}, and sets
-\tcode{x} to a default constructed state.
+\tcode{x} to a default constructed state.}
 
 \pnum
 \ensures
@@ -1772,7 +1782,7 @@ without the calling thread blocking.
 When \tcode{detach()} returns,
 \tcode{*this} no longer represents the possibly continuing thread of execution.
 When the thread previously represented by \tcode{*this} ends execution,
-the implementation shall release any owned resources.
+the implementation \removed{shall} release\added{s} any owned resources.
 
 \pnum
 \ensures
