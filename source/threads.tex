@@ -44,7 +44,7 @@ any of the function's error conditions is detected or
 a call to
 an operating system or other underlying API results in an error that prevents the
 library function from
-meeting its specifications. Failure to allocate storage \removed{shal bel}\added{is} reported as described
+meeting its specifications. Failure to allocate storage \removed{shal be}\added{is} reported as described
 in~\ref{res.on.exception.handling}.
 
 \begin{example}
@@ -1209,6 +1209,11 @@ template<class F, class... Args> explicit thread(F&& f, Args&&... args);
 \end{itemdecl}
 
 \begin{itemdescr}
+\added{\pnum}
+\removed{\remarks}\added{\constraints} 
+\removed{This constructor shall not participate in overload resolution if} \tcode{remove_cvref_t<F>}
+is \added{not} the same type as \tcode{std::thread}.
+
 \pnum
 \begin{addedblock}
 \mandates The following are all \tcode{true}:
@@ -1218,11 +1223,6 @@ template<class F, class... Args> explicit thread(F&& f, Args&&... args);
 \item \tcode{is_invocable_v<decay_t<F>, decay_t<Arg>...>}.
 \end{itemize} 
 \end{addedblock}
-
-\added{\pnum}
-\removed{\remarks}\added{\constraints} 
-\removed{This constructor shall not participate in overload resolution if} \tcode{remove_cvref_t<F>}
-is \added{not} the same type as \tcode{std::thread}.
 
 \pnum
 \removed{\requires}\added{\expects}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} shall meet the
@@ -1575,6 +1575,11 @@ is a valid expression or
 \end{codeblock}
 is a valid expression.
 \end{removedblock}
+
+\constraints
+\tcode{remove_cvref_t<F>} is not the same type as \tcode{jthread}.
+
+\pnum
 \begin{addedblock}
 \mandates The following are all \tcode{true}:
 \begin{itemize}
@@ -1583,10 +1588,6 @@ is a valid expression.
 \item \tcode{is_invocable_v<decay_t<F>, decay_t<Arg>...>}.
 \end{itemize} 
 \end{addedblock}
-
-\pnum
-\constraints
-\tcode{remove_cvref_t<F>} is not the same type as \tcode{jthread}.
 
 \pnum
 \effects
