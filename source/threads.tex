@@ -29,9 +29,9 @@ between threads, as summarized in \tref{thread.summary}.
 Throughout this Clause, the names of template parameters are used to express type
 requirements.
 If a template parameter is named \tcode{Predicate}, \tcode{operator()} applied to
-the template argument \removed{shall} return\added{s} a value that is convertible to \tcode{bool}.
+the template argument shall return a value that is convertible to \tcode{bool}.
 If a template parameter is named \tcode{Clock},
-the corresponding template argument \removed{shall be}\added{is} a type \tcode{C}
+the corresponding template argument shall be a type \tcode{C}
 for which \tcode{is_clock_v<C>} is \tcode{true};
 otherwise the program is ill-formed.
 
@@ -44,7 +44,7 @@ any of the function's error conditions is detected or
 a call to
 an operating system or other underlying API results in an error that prevents the
 library function from
-meeting its specifications. Failure to allocate storage \removed{shal be}\added{is} reported as described
+meeting its specifications. Failure to allocate storage \removed{shall be}\added{is} reported as described
 in~\ref{res.on.exception.handling}.
 
 \begin{example}
@@ -109,10 +109,8 @@ during the timeout, the behavior should be as follows:
 \item
 if $C_a > C_t$, the waiting function should wake as soon as possible, i.e., $C_a + D_i + D_m$,
 since the timeout is already satisfied.
-\begin{note}
-This specification \removed{may}\added{can} result in the total
+This specification may result in the total
 duration of the wait decreasing when measured against a steady clock.
-\end{note}
 
 \item
 if $C_a \leq C_t$, the waiting function should not time out until \tcode{Clock::now()} returns a
@@ -145,7 +143,7 @@ and hardware. The finest resolution provided by an implementation is called the
 \term{native resolution}.
 
 \pnum
-Implementation-provided clocks that are used for these functions shall meet the
+Implementation-provided clocks that are used for these functions \removed{shall} meet the
 \oldconcept{TrivialClock} requirements\iref{time.clock.req}.
 
 \pnum
@@ -162,7 +160,7 @@ the implementation as specified in~\ref{time.clock} do not throw exceptions.
 \rSec3[thread.req.lockable.general]{In general}
 
 \pnum
-An \defn{execution agent} is an entity such as a thread that \removed{may}\added{can} perform work in parallel with
+An \defn{execution agent} is an entity such as a thread that may perform work in parallel with
 other execution agents.
 \begin{note}
 Implementations or users \removed{may}\added{can} introduce other kinds of
@@ -207,7 +205,7 @@ m.lock()
 \pnum
 \effects
 Blocks until a lock can be acquired for the current execution agent. If an exception
-is thrown then a lock shall not have been acquired for the current execution agent.
+is thrown then a lock \removed{shall not have}\added{has not} been acquired for the current execution agent.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -242,7 +240,7 @@ m.try_lock()
 \pnum
 \effects
 Attempts to acquire a lock for the current execution agent without blocking. If an
-exception is thrown then a lock shall not have been acquired for the current execution agent.
+exception is thrown then a lock \removed{shall not have}\added{has not} been acquired for the current execution agent.
 
 \pnum
 \returntype \tcode{bool}.
@@ -269,9 +267,9 @@ m.try_lock_for(rel_time)
 \pnum
 \effects
 Attempts to acquire a lock for the current execution agent within the relative
-timeout\iref{thread.req.timing} specified by \tcode{rel_time}. The function shall not return
+timeout\iref{thread.req.timing} specified by \tcode{rel_time}. The function \removed{shall}\added{will} not return
 within the timeout specified by \tcode{rel_time} unless it has obtained a lock on \tcode{m}
-for the current execution agent. If an exception is thrown then a lock shall not have been
+for the current execution agent. If an exception is thrown then a lock \removed{shall not have}\added{has not} been
 acquired for the current execution agent.
 
 \pnum
@@ -290,9 +288,9 @@ m.try_lock_until(abs_time)
 \pnum
 \effects
 Attempts to acquire a lock for the current execution agent before the absolute
-timeout\iref{thread.req.timing} specified by \tcode{abs_time}. The function shall not return
+timeout\iref{thread.req.timing} specified by \tcode{abs_time}. The function \removed{shall}\added{will} not return
 before the timeout specified by \tcode{abs_time} unless it has obtained a lock on \tcode{m} for
-the current execution agent. If an exception is thrown then a lock shall not have been acquired
+the current execution agent. If an exception is thrown then a lock \removed{shall not have}\added{has not} been acquired
 for the current execution agent.
 
 \pnum
@@ -1021,7 +1019,7 @@ namespace std {
 The class \tcode{thread} provides a mechanism to create a new thread of execution, to join with
 a thread (i.e., wait for a thread to complete), and to perform other operations that manage and
 query the state of a thread. A \tcode{thread} object uniquely represents a particular thread of
-execution. That representation \removed{may}\added{can} be transferred to other \tcode{thread} objects in such a way
+execution. That representation may be transferred to other \tcode{thread} objects in such a way
 that no two \tcode{thread} objects simultaneously represent the same thread of execution. A
 thread of execution is \term{detached} when no \tcode{thread} object represents that thread.
 Objects of class \tcode{thread} can be in a state that does not represent a thread of
@@ -1196,7 +1194,7 @@ thread() noexcept;
 \begin{itemdescr}
 \pnum
 \effects
-\removed{Constructs a \tcode{thread}}\added{The} object does not represent a thread of execution.
+\removed{Constructs a \tcode{thread}}\added{The} object \removed{that} does not represent a thread of execution.
 
 \pnum
 \ensures
@@ -1225,7 +1223,7 @@ is \added{not} the same type as \tcode{std::thread}.
 \end{addedblock}
 
 \pnum
-\removed{\requires}\added{\expects}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} shall meet the
+\removed{\requires}\added{\expects}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} \removed{shall} meet the
 \oldconcept{MoveConstructible} requirements.
 \removed{
 \tcode{%
@@ -1309,7 +1307,7 @@ value of \tcode{x.get_id()} prior to the start of construction.
 
 \begin{itemdescr}
 \pnum
-If \tcode{joinable()}, calls \tcode{terminate()}. Otherwise, has no effects.
+\effects If \tcode{joinable()}, calls \tcode{terminate()}. Otherwise, has no effects.
 \begin{note}
 Either implicitly detaching or joining a \tcode{joinable()} thread in its
 destructor could result in difficult to debug correctness (for detach) or performance
@@ -2036,11 +2034,11 @@ recursive and non-recursive mutexes are supplied.
 The \defn{mutex types} are the standard library types \tcode{mutex},
 \tcode{recursive_mutex}, \tcode{timed_mutex}, \tcode{recursive_timed_mutex},
 \tcode{shared_mutex}, and \tcode{shared_timed_mutex}.
-They shall meet the requirements set out in this subclause. In this description, \tcode{m}
+They \removed{shall} meet the requirements set out in this subclause. In this description, \tcode{m}
 denotes an object of a mutex type.
 
 \pnum
-The mutex types shall meet the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
+The mutex types \removed{shall} meet the \oldconcept{Lockable} requirements\iref{thread.req.lockable.req}.
 
 \pnum
 The mutex types \removed{shall be}\added{meet} \oldconcept{DefaultConstructible} and \oldconcept{Destructible}. If
@@ -2236,7 +2234,7 @@ class\iref{class.prop}.
 \begin{note}
 A program \removed{may}\added{can} deadlock if the thread that owns a \tcode{mutex} object calls
 \tcode{lock()} on that object. If the implementation can detect the deadlock,
-a \tcode{resource_deadlock_would_occur} error condition \removed{may}\added{can} be observed.
+a \tcode{resource_deadlock_would_occur} error condition \removed{may}\added{might} be observed.
 \end{note}
 
 \pnum
@@ -2279,15 +2277,15 @@ requirements\iref{thread.mutex.requirements}. It \removed{shall be}\added{is} a 
 class\iref{class.prop}.
 
 \pnum
-A thread that owns a \tcode{recursive_mutex} object \removed{may}\added{can} acquire additional levels of
+A thread that owns a \tcode{recursive_mutex} object may acquire additional levels of
 ownership by calling \tcode{lock()} or \tcode{try_lock()} on that object. It is
-unspecified how many levels of ownership \removed{may}\added{can} be acquired by a single thread. If a thread
+unspecified how many levels of ownership may be acquired by a single thread. If a thread
 has already acquired the maximum level of ownership for a \tcode{recursive_mutex}
 object, additional calls to \tcode{try_lock()} \removed{shall} fail, and additional calls to
 \tcode{lock()} \removed{shall} throw an exception of type \tcode{system_error}. A thread
 shall call \tcode{unlock()} once for each level of ownership acquired by calls to
 \tcode{lock()} and \tcode{try_lock()}. Only when all levels of ownership have been
-released \removed{may}\added{can} ownership be acquired by another thread.
+released may ownership be acquired by another thread.
 
 \pnum
 The behavior of a program is undefined if:
@@ -2486,10 +2484,10 @@ requirements\iref{thread.timedmutex.requirements}. It \removed{shall be}\added{i
 class\iref{class.prop}.
 
 \pnum
-A thread that owns a \tcode{recursive_timed_mutex} object \removed{may}\added{can} acquire additional
+A thread that owns a \tcode{recursive_timed_mutex} object may acquire additional
 levels of ownership by calling \tcode{lock()}, \tcode{try_lock()},
 \tcode{try_lock_for()}, or \tcode{try_lock_until()} on that object. It is
-unspecified how many levels of ownership \removed{may}\added{can} be acquired by a single thread. If
+unspecified how many levels of ownership may be acquired by a single thread. If
 a thread has already acquired the maximum level of ownership for a
 \tcode{recursive_timed_mutex} object, additional calls to \tcode{try_lock()},
 \tcode{try_lock_for()}, or \tcode{try_lock_until()} \removed{shall} fail, and additional
@@ -2497,7 +2495,7 @@ calls to \tcode{lock()} \removed{shall} throw an exception of type \tcode{system
 thread shall call \tcode{unlock()} once for each level of ownership acquired by
 calls to \tcode{lock()}, \tcode{try_lock()}, \tcode{try_lock_for()}, and
 \tcode{try_lock_until()}. Only when all levels of ownership have been released
-\removed{may}\added{can} ownership of the object be acquired by another thread.
+may ownership of the object be acquired by another thread.
 
 \pnum
 The behavior of a program is undefined if:
@@ -2826,9 +2824,9 @@ The behavior of a program is undefined if:
 \rSec2[thread.lock]{Locks}
 
 \pnum
-A \term{lock} is an object that holds a reference to a lockable object and \removed{may}\added{can} unlock the
+A \term{lock} is an object that holds a reference to a lockable object and may unlock the
 lockable object during the lock's destruction (such as when leaving block scope). An execution
-agent \removed{may}\added{can} use a lock to aid in managing ownership of a lockable object in an exception safe
+agent may use a lock to aid in managing ownership of a lockable object in an exception safe
 manner. A lock is said to \term{own} a lockable object if it is currently managing the
 ownership of that lockable object for an execution agent. A lock does not manage the lifetime
 of the lockable object it references.
@@ -3082,8 +3080,8 @@ namespace std {
 
 \pnum
 An object of type \tcode{unique_lock} controls the ownership of a lockable
-object within a scope. Ownership of the lockable object \removed{may}\added{can} be acquired at
-construction or after construction, and \removed{may}\added{can} be transferred, after
+object within a scope. Ownership of the lockable object may be acquired at
+construction or after construction, and may be transferred, after
 acquisition, to another \tcode{unique_lock} object. Objects of type \tcode{unique_lock} are not
 copyable but are movable. The behavior of a program is undefined if the contained pointer
 \tcode{pm} is not null and the lockable object pointed
@@ -3160,7 +3158,7 @@ unique_lock(mutex_type& m, try_to_lock_t);
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects}
-The supplied \tcode{Mutex} type shall meet the \oldconcept{Lockable}
+The supplied \tcode{Mutex} type \removed{shall} meet\added{s} the \oldconcept{Lockable}
 requirements\iref{thread.req.lockable.req}.
 If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
 
@@ -3205,7 +3203,7 @@ template<class Clock, class Duration>
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread
-does not own the mutex. The supplied \tcode{Mutex} type shall meet the
+does not own the mutex. The supplied \tcode{Mutex} type \removed{shall} meet\added{s} the
 \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -3228,7 +3226,7 @@ template<class Rep, class Period>
 \begin{itemdescr}
 \pnum
 \removed{\requires}\added{\expects} If \tcode{mutex_type} is not a recursive mutex the calling thread does not own the mutex.
-The supplied \tcode{Mutex} type shall meet the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+The supplied \tcode{Mutex} type \removed{shall} meet\added{s} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects
@@ -3324,7 +3322,7 @@ bool try_lock();
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\expects} The supplied \tcode{Mutex} shall meet the \oldconcept{Lockable}
+\removed{\requires}\added{\expects} The supplied \tcode{Mutex} \removed{shall} meet\added{s} the \oldconcept{Lockable}
 requirements\iref{thread.req.lockable.req}.
 
 \pnum
@@ -3362,7 +3360,7 @@ template<class Clock, class Duration>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\expects} The supplied \tcode{Mutex} type shall meet the \oldconcept{TimedLockable}
+\removed{\requires}\added{\expects} The supplied \tcode{Mutex} type \removed{shall} meet\added{s} the \oldconcept{TimedLockable}
 requirements\iref{thread.req.lockable.timed}.
 
 \pnum
@@ -3400,7 +3398,7 @@ template<class Rep, class Period>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\expects} The supplied \tcode{Mutex} type shall meet the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
+\removed{\requires}\added{\expects} The supplied \tcode{Mutex} type \removed{shall} meet\added{s} the \oldconcept{TimedLockable} requirements\iref{thread.req.lockable.timed}.
 
 \pnum
 \effects
@@ -3587,8 +3585,8 @@ namespace std {
 
 \pnum
 An object of type \tcode{shared_lock} controls the shared ownership of a
-lockable object within a scope. Shared ownership of the lockable object \removed{may}\added{can} be
-acquired at construction or after construction, and \removed{may}\added{can} be transferred, after
+lockable object within a scope. Shared ownership of the lockable object may be
+acquired at construction or after construction, and may be transferred, after
 acquisition, to another \tcode{shared_lock} object. Objects of type
 \tcode{shared_lock} are not copyable but are movable. The behavior of a program
 is undefined if the contained pointer \tcode{pm} is not null and the lockable
@@ -4018,7 +4016,7 @@ template<class L1, class L2, class... L3> int try_lock(L1&, L2&, L3&...);
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\expects} Each template parameter type shall meet the \oldconcept{Lockable} requirements.
+\removed{\requires}\added{\expects} Each template parameter type \removed{shall} meet\added{s} the \oldconcept{Lockable} requirements.
 \begin{note}
 The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
@@ -4046,7 +4044,7 @@ template<class L1, class L2, class... L3> void lock(L1&, L2&, L3&...);
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\expects} Each template parameter type shall meet the \oldconcept{Lockable} requirements.
+\removed{\requires}\added{\expects} Each template parameter type \removed{shall} meet\added{s} the \oldconcept{Lockable} requirements.
 \begin{note}
 The
 \tcode{unique_lock} class template meets these requirements when suitably instantiated.
@@ -6070,7 +6068,7 @@ second, the provider releases its shared state.
 \pnum
 A shared state is \defn{ready} only if it holds a value or an exception ready for
 retrieval.
-Waiting for a shared state to become ready \removed{may}\added{can} invoke code to compute the result on
+Waiting for a shared state to become ready may invoke code to compute the result on
 the waiting thread if so specified in the description of the class or function that creates
 the state object.
 
@@ -6091,7 +6089,7 @@ each of that thread's objects with thread storage duration\iref{basic.stc.thread
 is sequenced before making that shared state ready.
 
 \pnum
-Access to the result of the same shared state \removed{may}\added{can} conflict\iref{intro.multithread}.
+Access to the result of the same shared state may conflict\iref{intro.multithread}.
 \begin{note}
 This explicitly specifies that the result of the shared state is
 visible in the objects that reference this state in the sense of data race
@@ -6721,7 +6719,7 @@ timeout-related exceptions\iref{thread.req.timing}.
 
 \pnum
 The class template \tcode{shared_future} defines a type for asynchronous return objects
-which \removed{may}\added{can} share their shared state with other asynchronous return
+which may share their shared state with other asynchronous return
 objects. A default-constructed \tcode{shared_future}
 object has no shared state. A \tcode{shared_future} object with
 shared state can
@@ -7243,7 +7241,7 @@ int work(int value) {
 
 \begin{note}
 Line \#1 might not result in concurrency because
-the \tcode{async} call uses the default policy, which \removed{may}\added{can} use
+the \tcode{async} call uses the default policy, which may use
 \tcode{launch::deferred}, in which case the lambda might not be invoked until the
 \tcode{get()} call; in that case, \tcode{work1} and \tcode{work2} are called on the
 same thread and there is no concurrency.
@@ -7321,11 +7319,11 @@ template<class F>
   packaged_task(F&& f);
 \end{itemdecl}
 
+\begin{itemdescr}
 \added{\pnum
-\constraints \\ \tcode{remove_cvref_t<F>}
+\constraints \tcode{remove_cvref_t<F>}
 is not the same type as \tcode{packaged_task<R(ArgTypes...)>}.}
 
-\begin{itemdescr}
 \pnum
 \begin{removedblock}
 \requires
