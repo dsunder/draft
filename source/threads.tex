@@ -1225,7 +1225,7 @@ is \added{not} the same type as \removed{\tcode{std::}}\tcode{thread}.
 \end{addedblock}
 
 \pnum
-\removed{\requires}\added{\expects}\ \removed{\tcode{F}} \added{\tcode{decay_t<F>}} and each $\tcode{T}_i$ in \removed{\tcode{Args}} \added{\tcode{decay_t<Args>}} \removed{shall} meet the
+\removed{\requires}\added{\expects}\ \removed{\tcode{F}} \added{\tcode{decay_t<F>}} and each \removed{$\tcode{T}_i$} \added{type} in \removed{\tcode{Args}} \added{\tcode{decay_t<Args>}} \removed{shall} meet the
 \oldconcept{MoveConstructible} requirements.
 \removed{
 \tcode{%
@@ -1592,7 +1592,7 @@ is a valid expression.
 \end{addedblock}
 
 \pnum
-\added{\expects \tcode{decay_t<F>} and each $\tcode{T}_i$ in \tcode{decay_t<Args>} meet the
+\added{\expects \tcode{decay_t<F>} and each type in \tcode{decay_t<Args>} meet the
 \oldconcept{MoveConstructible} requirements.}
 
 \pnum
@@ -7100,7 +7100,7 @@ shall be a valid expression.
 \end{addedblock}
 
 \added{\pnum
-\expects \tcode{decay_t<F>} and each $\tcode{T}_i$ in \tcode{decay_t<Args>} meet the \oldconcept{MoveConstructible} requirements.}
+\expects \tcode{decay_t<F>} and each type in \tcode{decay_t<Args>} meet the \oldconcept{MoveConstructible} requirements.}
 
 \pnum
 \effects
