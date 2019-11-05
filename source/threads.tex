@@ -205,7 +205,7 @@ m.lock()
 \pnum
 \effects
 Blocks until a lock can be acquired for the current execution agent. If an exception
-is thrown then a lock \removed{shall not have}\added{has not} been acquired for the current execution agent.
+is thrown then a lock shall not have been acquired for the current execution agent.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -240,7 +240,7 @@ m.try_lock()
 \pnum
 \effects
 Attempts to acquire a lock for the current execution agent without blocking. If an
-exception is thrown then a lock \removed{shall not have}\added{has not} been acquired for the current execution agent.
+exception is thrown then a lock shall not have been acquired for the current execution agent.
 
 \pnum
 \returntype \tcode{bool}.
@@ -1210,20 +1210,22 @@ template<class F, class... Args> explicit thread(F&& f, Args&&... args);
 \added{\pnum}
 \removed{\remarks}\added{\constraints} 
 \removed{This constructor shall not participate in overload resolution if} \tcode{remove_cvref_t<F>}
-is \added{not} the same type as \tcode{std::thread}.
+is \added{not} the same type as \removed{\tcode{std::}}\tcode{thread}.
 
 \pnum
 \begin{addedblock}
 \mandates The following are all \tcode{true}:
 \begin{itemize}
-\item \tcode{is_move_constructible<decay_t<F>>},
-\item \tcode{(is_move_constructible<decay_t<Args>> \&\& ...)}, and
-\item \tcode{is_invocable_v<decay_t<F>, decay_t<Arg>...>}.
+\item \tcode{is_constructible_v<decay_t<F>,F>},
+\item \tcode{(is_constructible_v<decay_t<Args>, Args> \&\& ...)}, 
+\item \tcode{is_move_constructible_v<decay_t<F>>},
+\item \tcode{(is_move_constructible_v<decay_t<Args>> \&\& ...)}, and
+\item \tcode{is_invocable_v<decay_t<F>, decay_t<Args>...>}.
 \end{itemize} 
 \end{addedblock}
 
 \pnum
-\removed{\requires}\added{\expects}\ \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} \removed{shall} meet the
+\removed{\requires}\added{\expects}\ \removed{\tcode{F}} \added{\tcode{decay_t<F>}} and each $\tcode{T}_i$ in \removed{\tcode{Args}} \added{\tcode{decay_t<Args>}} \removed{shall} meet the
 \oldconcept{MoveConstructible} requirements.
 \removed{
 \tcode{%
@@ -1236,7 +1238,7 @@ shall be a valid expression.}
 \effects
 \removed{Constructs an object of type \tcode{thread}.} The new thread of execution executes
 \tcode{%
-\placeholdernc{INVOKE}(\brk{}%
+\removed{\placeholdernc{INVOKE}}\added{invoke}(\brk{}%
 \placeholdernc{decay-copy}(\brk{}%
 std::forward<F>(f)),
 \placeholdernc{decay-copy}(\brk{}%
@@ -1250,7 +1252,7 @@ of \tcode{f} will be thrown in the constructing thread, not the new thread.
 If the
 invocation of
 \tcode{%
-\placeholdernc{INVOKE}(\brk{}%
+\removed{\placeholdernc{INVOKE}}\added{invoke}(\brk{}%
 \placeholdernc{decay-copy}(\brk{}%
 std::forward<F>(f)),
 \placeholdernc{decay-copy}(\brk{}%
@@ -1581,11 +1583,17 @@ is a valid expression.
 \begin{addedblock}
 \mandates The following are all \tcode{true}:
 \begin{itemize}
+\item \tcode{is_constructible<decay_t<F>, F>},
+\item \tcode{(is_constructible<decay_t<Args>, Args> \&\& ...)},
 \item \tcode{is_move_constructible<decay_t<F>>},
 \item \tcode{(is_move_constructible<decay_t<Args>> \&\& ...)}, and
-\item \tcode{is_invocable_v<decay_t<F>, decay_t<Arg>...>}.
+\item \tcode{is_invocable_v<decay_t<F>, decay_t<Args>...> ||} \\ \tcode{is_invocable_v<decay_t<F>, stop_token, decay_t<Args>...>} .
 \end{itemize} 
 \end{addedblock}
+
+\pnum
+\added{\expects \tcode{decay_t<F>} and each $\tcode{T}_i$ in \tcode{decay_t<Args>} meet the
+\oldconcept{MoveConstructible} requirements.}
 
 \pnum
 \effects
@@ -1593,13 +1601,13 @@ Initializes \tcode{ssource} \removed{and
 constructs an object of type \tcode{jthread}}.
 The new thread of execution executes
 \begin{codeblock}
-@\placeholdernc{INVOKE}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)), get_stop_token(),
+@\removed{\placeholdernc{INVOKE}}\added{invoke}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)), get_stop_token(),
        @\placeholdernc{decay-copy}@(std::forward<Args>(args))...)
 \end{codeblock}
 if that expression is well-formed,
 otherwise
 \begin{codeblock}
-@\placeholdernc{INVOKE}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)), @\placeholdernc{decay-copy}@(std::forward<Args>(args))...)
+@\removed{\placeholdernc{INVOKE}}\added{invoke}@(@\placeholdernc{decay-copy}@(std::forward<F>(f)), @\placeholdernc{decay-copy}@(std::forward<Args>(args))...)
 \end{codeblock}
 with the calls to
 \tcode{\placeholder{decay-copy}} being evaluated in the constructing thread.
@@ -1608,7 +1616,7 @@ Any return value from this invocation is ignored.
 This implies that any exceptions not thrown from the invocation of the copy
 of \tcode{f} will be thrown in the constructing thread, not the new thread.
 \end{note}
-If the \tcode{\placeholdernc{INVOKE}} expression exits via an exception,
+If the \removed{\tcode{\placeholdernc{INVOKE}}} \added{\tcode{invoke}} expression exits via an exception,
 \tcode{terminate} is called.
 
 \pnum
@@ -4118,6 +4126,7 @@ template<class Callable, class... Args>
 \begin{itemdescr}
 \pnum
 \begin{removedblock}
+\requires
 \begin{codeblock}
 @\placeholdernc{INVOKE}@(std::forward<Callable>(func), std::forward<Args>(args)...)
 \end{codeblock}
@@ -6159,7 +6168,7 @@ template<class R, class Alloc>
 
 \begin{itemdescr}
 \pnum
-\removed{\requires}\added{\expects} \tcode{Alloc} shall meet the \oldconcept{Allocator}
+\removed{\requires}\added{\expects} \tcode{Alloc} \removed{shall} meet\added{s} the \oldconcept{Allocator}
 requirements (\tref{cpp17.allocator}).
 \end{itemdescr}
 
@@ -7082,6 +7091,8 @@ shall be a valid expression.
 \begin{addedblock}
 \mandates The following are all \tcode{true}:
 \begin{itemize}
+\item \tcode{is_constructible<decay_t<F>, F>},
+\item \tcode{(is_constructible<decay_t<Args>, Args> \&\&...)},
 \item \tcode{is_move_constructible<decay_t<F>>},
 \item \tcode{(is_move_constructible<decay_t<Args>> \&\&...)}, and
 \item \tcode{is_invocable_v<decay_t<F>, decay_t<Args>...>}.
@@ -7089,7 +7100,7 @@ shall be a valid expression.
 \end{addedblock}
 
 \added{\pnum
-\expects \tcode{F} and each $\tcode{T}_i$ in \tcode{Args} meet the \oldconcept{MoveConstructible} requirements.}
+\expects \tcode{decay_t<F>} and each $\tcode{T}_i$ in \tcode{decay_t<Args>} meet the \oldconcept{MoveConstructible} requirements.}
 
 \pnum
 \effects
@@ -7107,7 +7118,7 @@ the corresponding policies):
 \begin{itemize}
 \item
 If \tcode{launch::async} is set in \tcode{policy}, calls
-\tcode{\placeholdernc{INVOKE}(\placeholdernc{decay-copy}(std::forward<F>(f)),}
+\tcode{\removed{\placeholdernc{INVOKE}}\added{invoke}(\placeholdernc{decay-copy}(std::forward<F>(f)),}
 \tcode{\placeholdernc{decay-\brk{}copy}(std::forward<Args>(args))...)}
 (\ref{func.require}, \ref{thread.thread.constr})
 as if in a new thread of execution represented by a \tcode{thread} object
@@ -7116,7 +7127,7 @@ Any return value
 is stored as the result in the
 shared state. Any exception propagated from
 the execution of
-\tcode{\placeholdernc{INVOKE}(\placeholdernc{decay-copy}(std::forward<F>(f)),
+\tcode{\removed{\placeholdernc{INVOKE}}\added{invoke}(\placeholdernc{decay-copy}(std::forward<F>(f)),
 \placeholdernc{decay-copy}(std::forward\brk{}<Args>(args))...)}
 is stored as the exceptional result in the shared state.
 The \tcode{thread} object is
@@ -7130,7 +7141,7 @@ stores \tcode{\placeholdernc{decay-copy}(std::forward<F>(f))} and
 \tcode{\placeholdernc{decay-\brk{}copy}(std::forward<Args>(args))...}
 in the shared state. These copies of \tcode{f} and \tcode{args} constitute
 a \defn{deferred function}. Invocation of the deferred function evaluates
-\tcode{\placeholdernc{INVOKE}(std::move(g), std::move(xyz))} where \tcode{g} is the stored value of
+\tcode{\removed{\placeholdernc{INVOKE}}\added{invoke}(std::move(g), std::move(xyz))} where \tcode{g} is the stored value of
 \tcode{\placeholdernc{decay-copy}(std::forward<F>(f))} and \tcode{xyz} is the stored copy of
 \tcode{\placeholdernc{decay-copy}(std::forward<Args>(args))...}.
 Any return value is stored
@@ -7146,7 +7157,7 @@ non-timed waiting function\iref{futures.state}
 on an asynchronous return object referring to
 this shared state \removed{shall} invoke\added{s} the
 deferred function in the thread that called the waiting function.
-Once evaluation of \tcode{\placeholdernc{INVOKE}(std::move(g), std::move(xyz))} begins, the function is no longer
+Once evaluation of \tcode{\removed{\placeholdernc{INVOKE}}\added{invoke}(std::move(g), std::move(xyz))} begins, the function is no longer
 considered deferred.
 \begin{note}
 If this policy is specified together with other policies, such as when using a
@@ -7345,8 +7356,8 @@ is the same type as \tcode{packaged_task<R(ArgTypes...)>}.}
 
 \pnum
 \effects
-\removed{Constructs a new \tcode{packaged_task} object with a shared state and
-initializes}\added{Initializes} the object's stored task with \tcode{std::forward<F>(f)}.
+Constructs a new \tcode{packaged_task} object with a shared state and
+initializes the object's stored task with \tcode{std::forward<F>(f)}.
 
 \pnum
 \throws

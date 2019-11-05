@@ -38,8 +38,6 @@ The changes in this series of papers fall into four broad categories.
 
 This paper covers Clause 32 (Thread Support Library)
 
-%As a drive-by fix, I have removed a bunch of empty descriptions of the form: "Effects: Constructs an object of class \tcode{Foo}."
-
 The entire clause is reproduced here, but the changes are confined to a few sections:
 
 \begin{multicols}{2}
@@ -91,10 +89,33 @@ The entire clause is reproduced here, but the changes are confined to a few sect
 \end{itemize}
 \end{multicols}
 
-%Changes from R0:
-%\begin{itemize}
-%\item{Added a "Mandates" to ptr.launder \ref{ptr.launder}}
-%\end{itemize}
+Changes from R2:
+\begin{itemize}
+\item{Changed order of Constraints and Mandates.}
+\item{ thread.req.paramname \ref{thread.req.paramname} p1: revert to 'shalls'}
+\item{ thread.req.exceptions \ref{thread.req.exceptions} p1:  shal -> shall}
+\item{ thread.req.timing \ref{thread.req.timing} p4: make note normative}
+\item{ thread.thread.constr \ref{thread.thread.constr} p1: add \removed{that}}
+\item{ thread.thread.destr \ref{thread.thread.destr}  p1: should be effects}
+\item{ thread.mutex.requirements.mutex \ref{thread.mutex.requirements.mutex} p1 and p2 de-shall}
+\item{ thread.mutex.class \ref{thread.mutex.class} p4: can -> might}
+\item{ thread.mutex.recursive \ref{thread.mutex.recursive} p3: can -> may}
+\item{ thread.timedmutex.recursive \ref{thread.timedmutex.recursive} p3: can -> may}
+\item{ thread.lock.unique \ref{thread.lock.unique} p1: can -> may}
+\item{ thread.lock.unique.cons \ref{thread.lock.unique.cons} p8, p15, p18: remove shall}
+\item{ thread.lock.unique.locking \ref{thread.lock.unique.locking} p5, p11, p17: remove shall}
+\item{ thread.lock.shared \ref{thread.lock.shared} p1: can -> may}
+\item{ thread.lock.algorithm \ref{thread.lock.algorithm} p1, p4: remove shall}
+\item{ thread.thread.constr \ref{thread.thread.constr}, thread.jthread.cons \ref{thread.jthread.cons}, and futures.async \ref{futures.async} change INVOKE}
+\item{ thread.req.lockable.basic \ref{thread.req.lockable.basic} p2: convert back to shall}
+\item{ thread.req.lockable.req \ref{thread.req.lockable.req} p2: convert back to shall}
+\item{ thread.jthread.cons \ref{thread.jthread.cons} use stop_token in mandate, add missing requirement to expects}
+\item{ thread.once.callonce \ref{thread.once.callonce} p1: add missing requires to removed block}
+\item{ futures.promise \ref{futures.promise} p3: remove shall from expects}
+\item{ thread.thread.constr \ref{thread.thread.constr} use decay_t in expects}
+\item{ futures.async \ref{futures.async} p3: use decay_t in expects}
+\item{ futures.task.members \ref{futures.task.members} p6: remove changes}
+\end{itemize}
 
 \vspace*{\fill}
 
